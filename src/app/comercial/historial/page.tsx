@@ -13,10 +13,11 @@ export default async function HistorialPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-900">Historial de pedidos</h1>
+        <h1 className="text-lg font-semibold text-white">Historial de pedidos</h1>
         <Link
           href="/comercial"
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+          className="rounded-md border px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/5"
+          style={{ borderColor: "rgba(255,255,255,0.15)", backgroundColor: "#1e293b" }}
         >
           ← Volver
         </Link>

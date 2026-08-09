@@ -40,32 +40,40 @@ function TarjetaImportacion({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5">
+    <div
+      className="flex flex-col gap-3 rounded-xl border p-5 shadow-lg"
+      style={{
+        backgroundColor: "rgba(15,23,42,0.75)",
+        borderColor: "rgba(56,189,248,0.25)",
+        backdropFilter: "blur(10px)",
+      }}
+    >
       <div>
-        <h2 className="text-sm font-semibold text-slate-900">{titulo}</h2>
-        <p className="text-xs text-slate-500">{descripcion}</p>
+        <h2 className="text-sm font-semibold text-white">{titulo}</h2>
+        <p className="text-xs text-slate-400">{descripcion}</p>
       </div>
       <input
         type="file"
         accept=".xlsx,.xls"
         onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-        className="text-sm"
+        className="text-sm text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-slate-100 hover:file:bg-white/15"
       />
       <button
         type="button"
         onClick={importar}
         disabled={!archivo || subiendo}
-        className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+        className="w-fit rounded-md px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-60"
+        style={{ backgroundColor: "#1E3A8A" }}
       >
         {subiendo ? "Importando..." : "Importar"}
       </button>
 
-      {resumen?.error && <p className="text-sm text-red-600">{resumen.error}</p>}
+      {resumen?.error && <p className="text-sm text-red-400">{resumen.error}</p>}
       {resumen?.ok && (
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-slate-300">
           <p>{resumen.procesadas} filas procesadas.</p>
           {resumen.errores && resumen.errores.length > 0 && (
-            <ul className="mt-1 list-inside list-disc text-xs text-amber-600">
+            <ul className="mt-1 list-inside list-disc text-xs text-amber-400">
               {resumen.errores.map((e, i) => (
                 <li key={i}>{e}</li>
               ))}
@@ -80,9 +88,7 @@ function TarjetaImportacion({
 export default function ImportarPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-xl font-semibold text-slate-900">
-        Importar maestros de clientes
-      </h1>
+      <h1 className="text-xl font-semibold text-white">Importar maestros de clientes</h1>
       <TarjetaImportacion
         titulo="Maestro de clientes"
         descripcion="Archivo con RUC/DNI y BP (CustomerDocumentNumberRUC, CustomerDocumentNumberDNI, CustomerS4ID)."

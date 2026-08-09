@@ -84,17 +84,25 @@ export function VigilanciaActivos({
   const activos = registros.filter((r) => !r.fecha_salida);
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-700">
-          Clientes en instalaciones ({activos.length})
-        </h2>
-      </div>
-      <div className="divide-y divide-slate-100">
+    <div
+      className="rounded-xl border p-4 shadow-lg"
+      style={{
+        backgroundColor: "rgba(15,23,42,0.75)",
+        borderColor: "rgba(56,189,248,0.25)",
+        backdropFilter: "blur(10px)",
+      }}
+    >
+      <h2 className="mb-3 px-1 text-sm font-semibold uppercase tracking-wide text-white">
+        Clientes en instalaciones ({activos.length})
+      </h2>
+      <div className="flex flex-col gap-2">
         {activos.map((r) => (
-          <div key={r.id} className="flex items-center justify-between px-4 py-3">
+          <div
+            key={r.id}
+            className="flex items-center justify-between gap-3 rounded-[10px] bg-white px-4 py-3"
+          >
             <div>
-              <p className="text-sm font-medium text-slate-800">{r.razon_social}</p>
+              <p className="text-sm font-semibold text-[#0F172A]">{r.razon_social}</p>
               <p className="text-xs text-slate-400">
                 {LABEL_ATENCION[r.tipo_atencion]} · Ingreso{" "}
                 {format(new Date(r.fecha_ingreso), "HH:mm")}
@@ -102,14 +110,15 @@ export function VigilanciaActivos({
             </div>
             <button
               onClick={() => setRegistroCheckout(r)}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+              className="shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-white shadow transition hover:brightness-110"
+              style={{ backgroundColor: "#1E3A8A" }}
             >
               Registrar salida
             </button>
           </div>
         ))}
         {activos.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-slate-400">
+          <p className="rounded-[10px] bg-white/5 px-4 py-6 text-center text-sm text-slate-300">
             No hay clientes en instalaciones.
           </p>
         )}
@@ -150,7 +159,8 @@ export function VigilanciaActivos({
               <button
                 onClick={confirmarCheckout}
                 disabled={enviando}
-                className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="rounded-md px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+                style={{ backgroundColor: "#1E3A8A" }}
               >
                 {enviando ? "Guardando..." : "Confirmar salida"}
               </button>
