@@ -11,9 +11,9 @@ const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
 
 export async function PATCH(
   request: Request,
-  ctx: RouteContext<"/api/pedidos/[id]/estado">
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await ctx.params;
+  const { id } = await params;
   const supabase = await createClient();
   const {
     data: { user },

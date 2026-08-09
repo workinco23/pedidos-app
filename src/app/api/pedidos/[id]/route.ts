@@ -16,9 +16,9 @@ async function obtenerRol(
 
 export async function PATCH(
   request: Request,
-  ctx: RouteContext<"/api/pedidos/[id]">
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await ctx.params;
+  const { id } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -74,9 +74,9 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  ctx: RouteContext<"/api/pedidos/[id]">
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await ctx.params;
+  const { id } = await params;
   const supabase = await createClient();
   const {
     data: { user },
