@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { RegistroVigilancia } from "@/lib/types";
 
-export function AlertaMostrador() {
+export function AlertaMostrador({
+  onRegistrarPedido,
+}: {
+  onRegistrarPedido: (alerta: { documento: string; razonSocial: string }) => void;
+}) {
   const [alertas, setAlertas] = useState<RegistroVigilancia[]>([]);
 
   useEffect(() => {
@@ -54,14 +58,28 @@ export function AlertaMostrador() {
             Atención en mostrador: <strong>{a.razon_social}</strong> (
             {a.documento_cliente})
           </span>
-          <button
-            onClick={() =>
-              setAlertas((actuales) => actuales.filter((x) => x.id !== a.id))
-            }
-            className="text-amber-700 hover:text-amber-900"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                onRegistrarPedido({
+                  documento: a.documento_cliente,
+                  razonSocial: a.razon_social,
+                });
+                setAlertas((actuales) => actuales.filter((x) => x.id !== a.id));
+              }}
+              className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500"
+            >
+              Registrar pedido
+            </button>
+            <button
+              onClick={() =>
+                setAlertas((actuales) => actuales.filter((x) => x.id !== a.id))
+              }
+              className="text-amber-700 hover:text-amber-900"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       ))}
     </div>

@@ -1,10 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { obtenerUsuarioActual } from "@/lib/auth";
-import { NuevoPedidoForm } from "@/components/NuevoPedidoForm";
+import { ComercialPanelHeader } from "@/components/ComercialPanelHeader";
 import { PedidosComercialTable } from "@/components/PedidosComercialTable";
-import { AlertaMostrador } from "@/components/AlertaMostrador";
-import { IconoHistorial } from "@/components/ComercialIcons";
-import Link from "next/link";
 import type { Pedido } from "@/lib/types";
 
 export default async function ComercialPage() {
@@ -17,21 +14,7 @@ export default async function ComercialPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <AlertaMostrador />
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-400">
-          {pedidos?.length ?? 0} pedido(s) registrados
-        </p>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/comercial/historial"
-            className="flex items-center gap-1.5 text-sm text-slate-300 decoration-slate-500 underline-offset-4 hover:text-white hover:underline"
-          >
-            <IconoHistorial /> Ver historial
-          </Link>
-          <NuevoPedidoForm usuarioId={usuario.id} />
-        </div>
-      </div>
+      <ComercialPanelHeader usuarioId={usuario.id} totalPedidos={pedidos?.length ?? 0} />
       <PedidosComercialTable iniciales={(pedidos as Pedido[]) ?? []} />
     </div>
   );

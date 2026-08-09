@@ -1,15 +1,26 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { IconoMas } from "@/components/ComercialIcons";
-import type { TipoComprobante } from "@/lib/types";
+import type { OrigenPedido, TipoComprobante } from "@/lib/types";
+
+export interface PrefillMostrador {
+  documento: string;
+  razonSocial: string;
+}
 
 interface Props {
   usuarioId: string;
+  prefillMostrador?: PrefillMostrador | null;
+  onPrefillConsumido?: () => void;
 }
 
-export function NuevoPedidoForm({ usuarioId }: Props) {
+export function NuevoPedidoForm({
+  usuarioId,
+  prefillMostrador,
+  onPrefillConsumido,
+}: Props) {
   const [abierto, setAbierto] = useState(false);
   const [bp, setBp] = useState("");
   const [bpBloqueado, setBpBloqueado] = useState(false);
@@ -18,6 +29,7 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
   const [razonSocial, setRazonSocial] = useState("");
   const [pedidoVenta, setPedidoVenta] = useState("");
   const [ob, setOb] = useState("");
+  const [origen, setOrigen] = useState<OrigenPedido>("fuerza_ventas");
   const [tipoComprobante, setTipoComprobante] =
     useState<TipoComprobante>("factura");
   const [consultando, setConsultando] = useState(false);
@@ -25,6 +37,16 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
   const [registrandoBp, setRegistrandoBp] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!prefillMostrador) return;
+    setDocumento(prefillMostrador.documento);
+    setRazonSocial(prefillMostrador.razonSocial);
+    setOrigen("mostrador");
+    setAbierto(true);
+    onPrefillConsumido?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillMostrador]);
 
   async function buscarPorDoc(doc: string) {
     const res = await fetch(`/api/clientes/buscar?doc=${encodeURIComponent(doc)}`);
@@ -113,6 +135,7 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
     setRazonSocial("");
     setPedidoVenta("");
     setOb("");
+    setOrigen("fuerza_ventas");
     setTipoComprobante("factura");
     setError(null);
     setAbierto(false);
@@ -132,7 +155,7 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
       ob,
       tipo_comprobante: tipoComprobante,
       estado: "en_extraccion",
-      origen: "fuerza_ventas",
+      origen,
       usuario_creacion_id: usuarioId,
     });
 
@@ -259,6 +282,34 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
           onChange={(e) => setOb(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-slate-500">Origen</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOrigen("fuerza_ventas")}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+              origen === "fuerza_ventas"
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-300 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Fuerza de Ventas
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrigen("mostrador")}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+              origen === "mostrador"
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-300 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Mostrador
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">
