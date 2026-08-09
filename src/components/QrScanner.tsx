@@ -15,6 +15,7 @@ export function QrScanner({ onResultado, activo }: Props) {
   useEffect(() => {
     if (!activo) return;
     let cancelado = false;
+    let yaLeido = false;
 
     import("html5-qrcode").then(async ({ Html5Qrcode }) => {
       if (cancelado) return;
@@ -23,7 +24,15 @@ export function QrScanner({ onResultado, activo }: Props) {
       scannerRef.current = scanner;
 
       const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-      const onFrame = (textoDecodificado: string) => onResultado(textoDecodificado);
+      const onFrame = (textoDecodificado: string) => {
+        // La cámara sigue mandando frames varias veces por segundo mientras
+        // el QR siga en cuadro; sin esta guarda se dispara onResultado (y el
+        // registro de ingreso) una vez por cada frame detectado.
+        if (yaLeido) return;
+        yaLeido = true;
+        scanner.pause(true);
+        onResultado(textoDecodificado);
+      };
       const onFrameError = () => {
         // ignorar frames sin QR detectado
       };

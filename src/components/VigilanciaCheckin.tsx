@@ -7,6 +7,7 @@ export function VigilanciaCheckin() {
   const [modo, setModo] = useState<"qr" | "mostrador">("qr");
   const [documento, setDocumento] = useState("");
   const [procesando, setProcesando] = useState(false);
+  const [scannerKey, setScannerKey] = useState(0);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(
     null
   );
@@ -32,6 +33,11 @@ export function VigilanciaCheckin() {
     } finally {
       setProcesando(false);
     }
+  }
+
+  function escanearSiguiente() {
+    setMensaje(null);
+    setScannerKey((k) => k + 1);
   }
 
   async function registrarMostrador() {
@@ -84,7 +90,17 @@ export function VigilanciaCheckin() {
       </div>
 
       {modo === "qr" ? (
-        <QrScanner onResultado={registrarQr} activo={modo === "qr"} />
+        <div className="flex flex-col items-center gap-3">
+          <QrScanner key={scannerKey} onResultado={registrarQr} activo={modo === "qr"} />
+          {mensaje && (
+            <button
+              onClick={escanearSiguiente}
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            >
+              Escanear siguiente
+            </button>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           <input
