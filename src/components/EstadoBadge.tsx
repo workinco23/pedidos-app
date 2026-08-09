@@ -1,17 +1,21 @@
 import { ESTADO_LABELS, type EstadoPedido } from "@/lib/types";
+import { IconoCheck } from "@/components/ComercialIcons";
 
-const ESTILOS: Record<EstadoPedido, string> = {
-  en_extraccion: "bg-amber-100 text-amber-800",
-  contabilizado: "bg-blue-100 text-blue-800",
-  facturado: "bg-purple-100 text-purple-800",
-  entregado: "bg-green-100 text-green-800",
+const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
+  en_extraccion: { bg: "#FEF3C7", texto: "#B45309" },
+  contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
+  facturado: { bg: "#EDE9FE", texto: "#6D28D9" },
+  entregado: { bg: "#DCFCE7", texto: "#16A34A" },
 };
 
 export function EstadoBadge({ estado }: { estado: EstadoPedido }) {
+  const { bg, texto } = ESTILOS[estado];
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${ESTILOS[estado]}`}
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+      style={{ backgroundColor: bg, color: texto }}
     >
+      <IconoCheck />
       {ESTADO_LABELS[estado]}
     </span>
   );

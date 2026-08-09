@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { IconoMas } from "@/components/ComercialIcons";
 import type { TipoComprobante } from "@/lib/types";
 
 interface Props {
@@ -148,9 +149,10 @@ export function NuevoPedidoForm({ usuarioId }: Props) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+        className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110"
+        style={{ backgroundColor: "#1E3A8A" }}
       >
-        + Nuevo pedido
+        <IconoMas /> Nuevo pedido
       </button>
     );
   }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { construirPayloadQr } from "@/lib/qr";
+import { IconoQr } from "@/components/ComercialIcons";
 import type { Pedido } from "@/lib/types";
 
 function asuntoPorDefecto(pedido: Pedido) {
@@ -80,9 +81,10 @@ export function GenerarQrButton({ pedido }: { pedido: Pedido }) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500"
+        className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold hover:brightness-95"
+        style={{ backgroundColor: "#FFCD00", borderColor: "#B8930A", color: "#1E1E1E" }}
       >
-        Generar QR / Gmail
+        <IconoQr /> Generar QR / Gmail
       </button>
     );
   }

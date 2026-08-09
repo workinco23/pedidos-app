@@ -3,6 +3,7 @@ import { obtenerUsuarioActual } from "@/lib/auth";
 import { NuevoPedidoForm } from "@/components/NuevoPedidoForm";
 import { PedidosComercialTable } from "@/components/PedidosComercialTable";
 import { AlertaMostrador } from "@/components/AlertaMostrador";
+import { IconoHistorial } from "@/components/ComercialIcons";
 import Link from "next/link";
 import type { Pedido } from "@/lib/types";
 
@@ -18,15 +19,15 @@ export default async function ComercialPage() {
     <div className="mx-auto max-w-6xl">
       <AlertaMostrador />
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           {pedidos?.length ?? 0} pedido(s) registrados
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link
             href="/comercial/historial"
-            className="text-sm text-slate-500 underline hover:text-slate-700"
+            className="flex items-center gap-1.5 text-sm text-slate-300 decoration-slate-500 underline-offset-4 hover:text-white hover:underline"
           >
-            Ver historial
+            <IconoHistorial /> Ver historial
           </Link>
           <NuevoPedidoForm usuarioId={usuario.id} />
         </div>
