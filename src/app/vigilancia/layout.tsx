@@ -10,7 +10,7 @@ export default async function VigilanciaLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <TopNav usuario={usuario} />
+      <TopNav usuario={usuario} titulo="Panel de Vigilancia" />
       <main className="flex-1 p-6">{children}</main>
     </div>
   );

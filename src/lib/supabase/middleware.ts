@@ -6,7 +6,7 @@ const RUTA_POR_ROL: Record<RolUsuario, string> = {
   comercial: "/comercial",
   vigilancia: "/vigilancia",
   almacen: "/almacen",
-  admin: "/comercial",
+  admin: "/hub",
 };
 
 const PREFIJO_POR_ROL: Record<Exclude<RolUsuario, "admin">, string> = {
