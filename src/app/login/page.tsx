@@ -21,6 +21,7 @@ function LoginForm() {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           hd: process.env.NEXT_PUBLIC_DOMINIO_CORPORATIVO ?? "",
+          prompt: "select_account",
         },
       },
     });
