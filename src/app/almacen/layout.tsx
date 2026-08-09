@@ -1,5 +1,5 @@
 import { exigirRol } from "@/lib/auth";
-import { TopNav } from "@/components/TopNav";
+import { PanelHeader } from "@/components/PanelHeader";
 
 export default async function AlmacenLayout({
   children,
@@ -9,8 +9,8 @@ export default async function AlmacenLayout({
   const usuario = await exigirRol(["almacen"]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <TopNav usuario={usuario} titulo="Panel de Almacén" />
+    <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#0B1325" }}>
+      <PanelHeader usuario={usuario} titulo="Panel de Almacén" />
       <main className="flex-1 p-6">{children}</main>
     </div>
   );

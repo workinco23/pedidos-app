@@ -4,7 +4,7 @@ import { IconoCheck } from "@/components/ComercialIcons";
 const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
   en_extraccion: { bg: "#FEF3C7", texto: "#B45309" },
   contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
-  facturado: { bg: "#EDE9FE", texto: "#6D28D9" },
+  facturado: { bg: "#E0F2FE", texto: "#0284C7" },
   entregado: { bg: "#DCFCE7", texto: "#16A34A" },
 };
 

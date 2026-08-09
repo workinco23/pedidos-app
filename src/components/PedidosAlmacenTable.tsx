@@ -2,6 +2,7 @@
 
 import { usePedidosRealtime } from "@/lib/usePedidosRealtime";
 import { EstadoBadge } from "@/components/EstadoBadge";
+import { IconoCheck } from "@/components/ComercialIcons";
 import type { Pedido } from "@/lib/types";
 import { format } from "date-fns";
 
@@ -24,57 +25,75 @@ export function PedidosAlmacenTable({ iniciales }: { iniciales: Pedido[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {(["fuerza_ventas", "mostrador"] as const).map((origen) => (
-        <div key={origen} className="rounded-lg border border-slate-200 bg-white">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-slate-700">
-              {ORIGEN_LABELS[origen]}
-            </h2>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {pendientes
-              .filter((p) => p.origen === origen)
-              .map((p) => (
-                <div key={p.id} className="flex items-center justify-between px-4 py-3">
+      {(["fuerza_ventas", "mostrador"] as const).map((origen) => {
+        const items = pendientes.filter((p) => p.origen === origen);
+        return (
+          <div
+            key={origen}
+            className="rounded-xl border p-4 shadow-lg"
+            style={{
+              backgroundColor: "rgba(15,23,42,0.75)",
+              borderColor: "rgba(56,189,248,0.25)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between px-1">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-white">
+                {ORIGEN_LABELS[origen]}
+              </h2>
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+                style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+              >
+                {items.length}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {items.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 rounded-[10px] bg-white px-4 py-3"
+                >
                   <div>
-                    <p className="text-sm font-medium text-slate-800">
-                      {p.razon_social}
-                    </p>
+                    <p className="text-sm font-semibold text-[#0F172A]">{p.razon_social}</p>
                     <p className="text-xs text-slate-400">
                       OB {p.ob} · {format(new Date(p.fecha_registro), "dd/MM HH:mm")}
                     </p>
-                    <div className="mt-1">
+                    <div className="mt-1.5">
                       <EstadoBadge estado={p.estado} />
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-2">
                     {p.estado === "en_extraccion" && (
                       <button
                         onClick={() => cambiarEstado(p.id, "contabilizado")}
-                        className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-500"
+                        className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                       >
-                        Contabilizado
+                        <IconoCheck /> Contabilizado
                       </button>
                     )}
                     {p.estado === "facturado" && (
                       <button
                         onClick={() => cambiarEstado(p.id, "entregado")}
-                        className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-500"
+                        className="flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:brightness-95"
+                        style={{ backgroundColor: "#059669" }}
                       >
-                        Entregado
+                        <IconoCheck /> Entregado
                       </button>
                     )}
                   </div>
                 </div>
               ))}
-            {pendientes.filter((p) => p.origen === origen).length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-slate-400">
-                Sin pedidos pendientes.
-              </p>
-            )}
+              {items.length === 0 && (
+                <p className="rounded-[10px] bg-white/5 px-4 py-6 text-center text-sm text-slate-300">
+                  Sin pedidos pendientes.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

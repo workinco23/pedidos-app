@@ -7,7 +7,7 @@ import Link from "next/link";
 import { IconoLogout } from "@/components/ComercialIcons";
 import type { Usuario } from "@/lib/types";
 
-export function ComercialHeader({ usuario }: { usuario: Usuario }) {
+export function PanelHeader({ usuario, titulo }: { usuario: Usuario; titulo: string }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -22,15 +22,7 @@ export function ComercialHeader({ usuario }: { usuario: Usuario }) {
       className="relative flex items-center justify-between overflow-hidden px-6 py-4"
       style={{ backgroundColor: "#0F172A" }}
     >
-      <h1 className="relative z-10 text-lg font-semibold text-white">
-        {usuario.rol === "admin" ? (
-          <Link href="/hub" className="hover:text-slate-200">
-            Panel Comercial
-          </Link>
-        ) : (
-          "Panel Comercial"
-        )}
-      </h1>
+      <h1 className="relative z-10 text-lg font-semibold text-white">{titulo}</h1>
 
       {/* Placa trapezoidal con el logo */}
       <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden -translate-x-1/2 items-center sm:flex">
@@ -55,7 +47,16 @@ export function ComercialHeader({ usuario }: { usuario: Usuario }) {
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center gap-4">
+      <div className="relative z-10 flex items-center gap-3">
+        {usuario.rol === "admin" && (
+          <Link
+            href="/hub"
+            className="rounded-full border px-3.5 py-1.5 text-sm text-slate-200 backdrop-blur transition hover:bg-white/10"
+            style={{ borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.08)" }}
+          >
+            ← Hub
+          </Link>
+        )}
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium text-white">{usuario.nombre}</p>
           <p className="text-xs text-slate-400">{usuario.email}</p>
