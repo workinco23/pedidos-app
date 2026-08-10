@@ -3,7 +3,23 @@
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import type { Usuario } from "@/lib/types";
+import type { RolUsuario, Usuario } from "@/lib/types";
+
+const ROL_LABEL: Record<RolUsuario, string> = {
+  comercial: "Comercial",
+  almacen: "Almacén",
+  vigilancia: "Vigilancia",
+  sub_admin: "Sub Administrador",
+  admin: "Super Administrador",
+};
+
+const ROL_COLOR: Record<RolUsuario, { bg: string; texto: string }> = {
+  comercial: { bg: "#EAF1FB", texto: "#002F6C" },
+  almacen: { bg: "#EAF1FB", texto: "#002F6C" },
+  vigilancia: { bg: "#EAF1FB", texto: "#002F6C" },
+  sub_admin: { bg: "#FEF3C7", texto: "#92400E" },
+  admin: { bg: "#DCFCE7", texto: "#166534" },
+};
 
 export function HubHeader({ usuario }: { usuario: Usuario }) {
   const router = useRouter();
@@ -34,6 +50,12 @@ export function HubHeader({ usuario }: { usuario: Usuario }) {
           <p className="text-sm font-medium text-[#1E293B]">{usuario.nombre}</p>
           <p className="text-xs text-[#64748B]">{usuario.email}</p>
         </div>
+        <span
+          className="rounded-full px-3 py-1 text-xs font-semibold"
+          style={{ backgroundColor: ROL_COLOR[usuario.rol].bg, color: ROL_COLOR[usuario.rol].texto }}
+        >
+          {ROL_LABEL[usuario.rol]}
+        </span>
         <button
           onClick={cerrarSesion}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-[#1E293B] hover:bg-slate-50"
