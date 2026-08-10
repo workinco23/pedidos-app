@@ -6,10 +6,13 @@ const RUTA_POR_ROL: Record<RolUsuario, string> = {
   comercial: "/comercial",
   vigilancia: "/vigilancia",
   almacen: "/almacen",
+  sub_admin: "/hub",
   admin: "/hub",
 };
 
-const PREFIJO_POR_ROL: Record<Exclude<RolUsuario, "admin">, string> = {
+type RolConPrefijoPropio = "comercial" | "vigilancia" | "almacen";
+
+const PREFIJO_POR_ROL: Record<RolConPrefijoPropio, string> = {
   comercial: "/comercial",
   vigilancia: "/vigilancia",
   almacen: "/almacen",
@@ -78,8 +81,8 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (rol !== "admin") {
-      const prefijoPermitido = PREFIJO_POR_ROL[rol as Exclude<RolUsuario, "admin">];
+    if (rol === "comercial" || rol === "vigilancia" || rol === "almacen") {
+      const prefijoPermitido = PREFIJO_POR_ROL[rol];
       const intentaOtraArea = PREFIJOS_PROTEGIDOS.some(
         (prefijo) => pathname.startsWith(prefijo) && prefijo !== prefijoPermitido
       );
@@ -88,6 +91,11 @@ export async function updateSession(request: NextRequest) {
         url.pathname = prefijoPermitido;
         return NextResponse.redirect(url);
       }
+    } else if (rol === "sub_admin" && pathname.startsWith("/admin")) {
+      // sub_admin tiene acceso a todos los paneles menos Administración
+      const url = request.nextUrl.clone();
+      url.pathname = "/hub";
+      return NextResponse.redirect(url);
     }
   }
 

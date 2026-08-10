@@ -6,7 +6,7 @@ export default async function VigilanciaLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const usuario = await exigirRol(["vigilancia"]);
+  const usuario = await exigirRol(["vigilancia", "sub_admin"]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#0B1325" }}>

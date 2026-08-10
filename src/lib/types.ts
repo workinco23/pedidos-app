@@ -1,4 +1,4 @@
-export type RolUsuario = "comercial" | "vigilancia" | "almacen" | "admin";
+export type RolUsuario = "comercial" | "vigilancia" | "almacen" | "sub_admin" | "admin";
 
 export type TipoComprobante = "factura" | "boleta";
 

@@ -48,7 +48,7 @@ export function PanelHeader({ usuario, titulo }: { usuario: Usuario; titulo: str
       </div>
 
       <div className="relative z-10 flex items-center gap-3">
-        {usuario.rol === "admin" && (
+        {(usuario.rol === "admin" || usuario.rol === "sub_admin") && (
           <Link
             href="/hub"
             className="rounded-full border px-3.5 py-1.5 text-sm text-slate-200 backdrop-blur transition hover:bg-white/10"

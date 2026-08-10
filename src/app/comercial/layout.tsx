@@ -6,7 +6,7 @@ export default async function ComercialLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const usuario = await exigirRol(["comercial"]);
+  const usuario = await exigirRol(["comercial", "sub_admin"]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#0B1325" }}>

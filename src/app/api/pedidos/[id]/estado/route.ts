@@ -6,6 +6,7 @@ const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
   comercial: ["en_extraccion", "facturado"],
   almacen: ["contabilizado", "entregado"],
   vigilancia: [],
+  sub_admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
   admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
 };
 

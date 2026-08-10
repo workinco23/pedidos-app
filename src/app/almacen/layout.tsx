@@ -6,7 +6,7 @@ export default async function AlmacenLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const usuario = await exigirRol(["almacen"]);
+  const usuario = await exigirRol(["almacen", "sub_admin"]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#0B1325" }}>
