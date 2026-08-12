@@ -6,7 +6,8 @@ export type EstadoPedido =
   | "en_extraccion"
   | "contabilizado"
   | "facturado"
-  | "entregado";
+  | "entregado"
+  | "waiting";
 
 export type OrigenPedido = "fuerza_ventas" | "mostrador";
 
@@ -31,6 +32,7 @@ export interface Pedido {
   tipo_comprobante: TipoComprobante;
   estado: EstadoPedido;
   origen: OrigenPedido;
+  prioridad: boolean;
   qr_codigo_hash: string | null;
   usuario_creacion_id: string | null;
   updated_at: string;
@@ -95,4 +97,5 @@ export const ESTADO_LABELS: Record<EstadoPedido, string> = {
   contabilizado: "Contabilizado",
   facturado: "Facturado",
   entregado: "Entregado",
+  waiting: "Waiting",
 };

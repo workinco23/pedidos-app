@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AlertaMostrador } from "@/components/AlertaMostrador";
+import { AlertaClienteEnTienda } from "@/components/AlertaClienteEnTienda";
 import { NuevoPedidoForm, type PrefillMostrador } from "@/components/NuevoPedidoForm";
 import { IconoHistorial } from "@/components/ComercialIcons";
 
@@ -22,6 +23,7 @@ export function ComercialPanelHeader({
           setPrefill({ documento, razonSocial })
         }
       />
+      <AlertaClienteEnTienda />
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-slate-400">{totalPedidos} pedido(s) registrados</p>
         <div className="flex items-center gap-4">

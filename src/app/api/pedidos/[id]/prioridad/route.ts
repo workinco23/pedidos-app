@@ -1,15 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import type { EstadoPedido, RolUsuario } from "@/lib/types";
+import type { RolUsuario } from "@/lib/types";
 
-const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
-  comercial: ["en_extraccion", "facturado"],
-  // almacen puede mover un pedido a Waiting si se traba, y reanudarlo (vuelve a en_extraccion)
-  almacen: ["contabilizado", "entregado", "waiting", "en_extraccion"],
-  vigilancia: [],
-  sub_admin: ["en_extraccion", "contabilizado", "facturado", "entregado", "waiting"],
-  admin: ["en_extraccion", "contabilizado", "facturado", "entregado", "waiting"],
-};
+const ROLES_PERMITIDOS: RolUsuario[] = ["almacen", "sub_admin", "admin"];
 
 export async function PATCH(
   request: Request,
@@ -31,18 +24,18 @@ export async function PATCH(
     .single();
   const rol = perfil?.rol as RolUsuario | undefined;
 
-  const { estado } = (await request.json()) as { estado: EstadoPedido };
-
-  if (!rol || !ESTADOS_PERMITIDOS_POR_ROL[rol]?.includes(estado)) {
+  if (!rol || !ROLES_PERMITIDOS.includes(rol)) {
     return NextResponse.json(
-      { error: `El rol ${rol ?? "desconocido"} no puede asignar el estado "${estado}"` },
+      { error: `El rol ${rol ?? "desconocido"} no puede cambiar la prioridad` },
       { status: 403 }
     );
   }
 
+  const { prioridad } = (await request.json()) as { prioridad: boolean };
+
   const { data, error } = await supabase
     .from("pedidos")
-    .update({ estado })
+    .update({ prioridad })
     .eq("id", id)
     .select()
     .single();

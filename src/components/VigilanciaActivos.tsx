@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { RegistroVigilancia } from "@/lib/types";
-import { format } from "date-fns";
+import { format, differenceInMinutes } from "date-fns";
 
 const LABEL_ATENCION: Record<RegistroVigilancia["tipo_atencion"], string> = {
   recojo_qr: "Recojo con QR",
   atencion_mostrador: "Atención en Mostrador",
 };
+
+const UMBRAL_MINUTOS_DEMORA = 30;
 
 export function VigilanciaActivos({
   iniciales,
@@ -22,6 +24,13 @@ export function VigilanciaActivos({
   const [comprobantes, setComprobantes] = useState<string[]>([""]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+  const [, forzarActualizacion] = useState(0);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => forzarActualizacion((n) => n + 1), 30000);
+    return () => clearInterval(intervalo);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -72,6 +81,13 @@ export function VigilanciaActivos({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      const minutos = differenceInMinutes(
+        new Date(data.fecha_salida),
+        new Date(registroCheckout.fecha_ingreso)
+      );
+      setMensajeExito(
+        `Salida registrada: ${registroCheckout.razon_social} estuvo ${minutos} min en tienda.`
+      );
       setRegistroCheckout(null);
       setComprobantes([""]);
     } catch (err) {
@@ -80,6 +96,12 @@ export function VigilanciaActivos({
       setEnviando(false);
     }
   }
+
+  useEffect(() => {
+    if (!mensajeExito) return;
+    const t = setTimeout(() => setMensajeExito(null), 8000);
+    return () => clearTimeout(t);
+  }, [mensajeExito]);
 
   const activos = registros.filter((r) => !r.fecha_salida);
 
@@ -95,28 +117,53 @@ export function VigilanciaActivos({
       <h2 className="mb-3 px-1 text-sm font-semibold uppercase tracking-wide text-white">
         Clientes en instalaciones ({activos.length})
       </h2>
+      {mensajeExito && (
+        <p className="mb-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+          {mensajeExito}
+        </p>
+      )}
       <div className="flex flex-col gap-2">
-        {activos.map((r) => (
-          <div
-            key={r.id}
-            className="flex items-center justify-between gap-3 rounded-[10px] bg-white px-4 py-3"
-          >
-            <div>
-              <p className="text-sm font-semibold text-[#0F172A]">{r.razon_social}</p>
-              <p className="text-xs text-slate-400">
-                {LABEL_ATENCION[r.tipo_atencion]} · Ingreso{" "}
-                {format(new Date(r.fecha_ingreso), "HH:mm")}
-              </p>
-            </div>
-            <button
-              onClick={() => setRegistroCheckout(r)}
-              className="shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-white shadow transition hover:brightness-110"
-              style={{ backgroundColor: "#1E3A8A" }}
+        {activos.map((r) => {
+          const minutosDentro = differenceInMinutes(new Date(), new Date(r.fecha_ingreso));
+          const demorado = minutosDentro >= UMBRAL_MINUTOS_DEMORA;
+          return (
+            <div
+              key={r.id}
+              className="flex items-center justify-between gap-3 rounded-[10px] bg-white px-4 py-3"
             >
-              Registrar salida
-            </button>
-          </div>
-        ))}
+              <div>
+                <p className="text-sm font-semibold text-[#0F172A]">{r.razon_social}</p>
+                <p className="text-xs text-slate-400">
+                  {LABEL_ATENCION[r.tipo_atencion]} · Ingreso{" "}
+                  {format(new Date(r.fecha_ingreso), "HH:mm")}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    demorado ? "animate-pulse" : ""
+                  }`}
+                  style={
+                    demorado
+                      ? { backgroundColor: "#FEE2E2", color: "#B91C1C" }
+                      : { backgroundColor: "#F1F5F9", color: "#475569" }
+                  }
+                  title={demorado ? "Lleva más de 30 min sin registrar salida" : undefined}
+                >
+                  {demorado ? "⚠ " : ""}
+                  {minutosDentro} min
+                </span>
+                <button
+                  onClick={() => setRegistroCheckout(r)}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow transition hover:brightness-110"
+                  style={{ backgroundColor: "#1E3A8A" }}
+                >
+                  Registrar salida
+                </button>
+              </div>
+            </div>
+          );
+        })}
         {activos.length === 0 && (
           <p className="rounded-[10px] bg-white/5 px-4 py-6 text-center text-sm text-slate-300">
             No hay clientes en instalaciones.

@@ -6,6 +6,7 @@ const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
   contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
   facturado: { bg: "#E0F2FE", texto: "#0284C7" },
   entregado: { bg: "#DCFCE7", texto: "#16A34A" },
+  waiting: { bg: "#F3E8FF", texto: "#7E22CE" },
 };
 
 export function EstadoBadge({ estado }: { estado: EstadoPedido }) {

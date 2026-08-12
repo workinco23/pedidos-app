@@ -10,6 +10,7 @@ interface BodyQr {
 interface BodyMostrador {
   modo: "mostrador";
   documento: string;
+  razonSocialManual?: string;
 }
 
 export async function POST(request: Request) {
@@ -60,14 +61,21 @@ export async function POST(request: Request) {
 
   if (body.modo === "mostrador") {
     let razonSocial: string;
-    try {
-      const resultado = await consultarDocumento(body.documento);
-      razonSocial = resultado.razonSocial;
-    } catch (err) {
-      return NextResponse.json(
-        { error: err instanceof Error ? err.message : "Documento inválido" },
-        { status: 422 }
-      );
+    if (body.razonSocialManual?.trim()) {
+      razonSocial = body.razonSocialManual.trim();
+    } else {
+      try {
+        const resultado = await consultarDocumento(body.documento);
+        razonSocial = resultado.razonSocial;
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error: err instanceof Error ? err.message : "Documento inválido",
+            permiteManual: true,
+          },
+          { status: 422 }
+        );
+      }
     }
 
     const { data, error } = await supabase

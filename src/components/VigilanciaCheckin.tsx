@@ -6,6 +6,8 @@ import { QrScanner } from "@/components/QrScanner";
 export function VigilanciaCheckin() {
   const [modo, setModo] = useState<"qr" | "mostrador">("qr");
   const [documento, setDocumento] = useState("");
+  const [razonSocialManual, setRazonSocialManual] = useState("");
+  const [permiteManual, setPermiteManual] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const [scannerKey, setScannerKey] = useState(0);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(
@@ -47,15 +49,24 @@ export function VigilanciaCheckin() {
       const res = await fetch("/api/vigilancia/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modo: "mostrador", documento }),
+        body: JSON.stringify({
+          modo: "mostrador",
+          documento,
+          razonSocialManual: razonSocialManual.trim() || undefined,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.permiteManual) setPermiteManual(true);
+        throw new Error(data.error);
+      }
       setMensaje({
         tipo: "ok",
         texto: `Atención en mostrador registrada: ${data.razon_social}. Se notificó a Comercial.`,
       });
       setDocumento("");
+      setRazonSocialManual("");
+      setPermiteManual(false);
     } catch (err) {
       setMensaje({
         tipo: "error",
@@ -121,6 +132,19 @@ export function VigilanciaCheckin() {
             onChange={(e) => setDocumento(e.target.value)}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
           />
+          {permiteManual && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-amber-300">
+                No se encontró automáticamente. Escribe la razón social a mano:
+              </label>
+              <input
+                placeholder="Razón social"
+                value={razonSocialManual}
+                onChange={(e) => setRazonSocialManual(e.target.value)}
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+              />
+            </div>
+          )}
           <button
             onClick={registrarMostrador}
             disabled={procesando || !documento}

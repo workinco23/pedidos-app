@@ -63,6 +63,14 @@ export function IconoHistorial({ className }: { className?: string }) {
   );
 }
 
+export function IconoEstrella({ relleno }: { relleno?: boolean }) {
+  return (
+    <svg {...P} fill={relleno ? "currentColor" : "none"}>
+      <path d="M12 2.5 15 9l7 1-5 4.9 1.2 6.9-6.2-3.3-6.2 3.3L7 14.9 2 10l7-1Z" />
+    </svg>
+  );
+}
+
 export function IconoLogout() {
   return (
     <svg {...P} width="14" height="14">

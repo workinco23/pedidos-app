@@ -30,6 +30,7 @@ export function NuevoPedidoForm({
   const [pedidoVenta, setPedidoVenta] = useState("");
   const [ob, setOb] = useState("");
   const [origen, setOrigen] = useState<OrigenPedido>("fuerza_ventas");
+  const [esperando, setEsperando] = useState(false);
   const [tipoComprobante, setTipoComprobante] =
     useState<TipoComprobante>("factura");
   const [consultando, setConsultando] = useState(false);
@@ -136,6 +137,7 @@ export function NuevoPedidoForm({
     setPedidoVenta("");
     setOb("");
     setOrigen("fuerza_ventas");
+    setEsperando(false);
     setTipoComprobante("factura");
     setError(null);
     setAbierto(false);
@@ -154,7 +156,7 @@ export function NuevoPedidoForm({
       pedido_venta: pedidoVenta,
       ob,
       tipo_comprobante: tipoComprobante,
-      estado: "en_extraccion",
+      estado: esperando ? "waiting" : "en_extraccion",
       origen,
       usuario_creacion_id: usuarioId,
     });
@@ -323,6 +325,16 @@ export function NuevoPedidoForm({
           <option value="boleta">Boleta</option>
         </select>
       </div>
+
+      <label className="col-span-full flex items-center gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          checked={esperando}
+          onChange={(e) => setEsperando(e.target.checked)}
+          className="h-4 w-4 rounded border-slate-300"
+        />
+        Marcar como Waiting (queda en espera, no entra al flujo normal todavía)
+      </label>
 
       <div className="flex items-end gap-2">
         <button
