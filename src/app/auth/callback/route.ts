@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin: origenRequest } = new URL(request.url);
+  // En Netlify, el origin derivado de request.url a veces resuelve a la URL
+  // interna del deploy en vez del dominio público, así que preferimos la
+  // URL fija de producción cuando está configurada.
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? origenRequest;
   const code = searchParams.get("code");
 
   if (code) {
