@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import { construirPayloadQrCliente } from "@/lib/qr";
 import { IconoQr } from "@/components/ComercialIcons";
@@ -100,7 +101,7 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
     );
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
@@ -240,6 +241,7 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
           />
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
