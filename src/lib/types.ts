@@ -3,6 +3,7 @@ export type RolUsuario = "comercial" | "vigilancia" | "almacen" | "sub_admin" | 
 export type TipoComprobante = "factura" | "boleta";
 
 export type EstadoPedido =
+  | "waiting"
   | "en_extraccion"
   | "contabilizado"
   | "facturado"
@@ -113,6 +114,7 @@ export interface ResultadoBusquedaCliente {
 }
 
 export const ESTADO_LABELS: Record<EstadoPedido, string> = {
+  waiting: "Waiting",
   en_extraccion: "En Extracción",
   contabilizado: "Contabilizado",
   facturado: "Facturado",

@@ -2,6 +2,7 @@ import { ESTADO_LABELS, type EstadoPedido } from "@/lib/types";
 import { IconoCheck } from "@/components/ComercialIcons";
 
 const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
+  waiting: { bg: "#FEE2E2", texto: "#B91C1C" },
   en_extraccion: { bg: "#FEF3C7", texto: "#B45309" },
   contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
   facturado: { bg: "#E0F2FE", texto: "#0284C7" },
