@@ -81,7 +81,7 @@ export function PedidosAlmacenTable({ iniciales }: { iniciales: Pedido[] }) {
                         )}
                       </p>
                       <p className="text-xs text-slate-400">
-                        OB {[p.ob, ...p.obsAdicionales].join(", ")} ·{" "}
+                        Pedido {p.pedido_venta} · OB {[p.ob, ...p.obsAdicionales].join(", ")} ·{" "}
                         {format(new Date(p.fecha_registro), "dd/MM HH:mm")}
                       </p>
                       <div className="mt-1.5">
