@@ -12,11 +12,15 @@ function armarAsunto(pedidos: Pedido[]) {
 }
 
 function armarCuerpo(pedidos: Pedido[]) {
+  const singular = pedidos.length === 1;
   const lineas = pedidos.map((p) => {
     const obs = [p.ob, ...p.obsAdicionales].join(", ");
     return `- Pedido ${p.pedido_venta} (OB: ${obs})`;
   });
-  return `Estimado cliente ${pedidos[0].razon_social}\nLe informamos que se liberó(aron) su(s) pedido(s):\n${lineas.join("\n")}\nPor favor acercarse a recoger en 1 hora.`;
+  const frasePedido = singular
+    ? `Su pedido ha sido liberado:\n${lineas.join("\n")}`
+    : `Sus pedidos han sido liberados:\n${lineas.join("\n")}`;
+  return `Estimado cliente ${pedidos[0].razon_social}\n${frasePedido}\nPor favor acercarse a recoger en 1 hora aproximadamente.\n\nSaludos cordiales.`;
 }
 
 export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
@@ -103,7 +107,7 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
     >
       <div
         className="flex w-full flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-2xl"
-        style={{ maxWidth: 560, maxHeight: "85vh" }}
+        style={{ maxWidth: 640, maxHeight: "90vh" }}
       >
         <div
           className="flex items-center justify-between px-4 py-2"
@@ -161,9 +165,9 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
             </div>
             <textarea
               readOnly
-              rows={5}
+              rows={pedidos.length + 6}
               value={cuerpo}
-              className="resize-none rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+              className="resize-none rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-relaxed"
             />
           </div>
 
