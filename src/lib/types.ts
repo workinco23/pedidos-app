@@ -6,8 +6,7 @@ export type EstadoPedido =
   | "en_extraccion"
   | "contabilizado"
   | "facturado"
-  | "entregado"
-  | "waiting";
+  | "entregado";
 
 export type OrigenPedido = "fuerza_ventas" | "mostrador";
 
@@ -36,6 +35,14 @@ export interface Pedido {
   qr_codigo_hash: string | null;
   usuario_creacion_id: string | null;
   updated_at: string;
+  /** OBs adicionales (más allá de `ob`), traídas por join con pedido_obs. No viene en eventos realtime. */
+  obsAdicionales: string[];
+}
+
+export interface PedidoOb {
+  id: string;
+  pedido_id: string;
+  ob: string;
 }
 
 export interface RegistroVigilancia {
@@ -47,6 +54,14 @@ export interface RegistroVigilancia {
   fecha_ingreso: string;
   fecha_salida: string | null;
   usuario_vigilancia_id: string | null;
+  dni_receptor: string | null;
+  nombre_receptor: string | null;
+}
+
+export interface RegistroVigilanciaPedido {
+  id: string;
+  registro_vigilancia_id: string;
+  pedido_id: string;
 }
 
 export interface ComprobanteSalida {
@@ -56,12 +71,17 @@ export interface ComprobanteSalida {
   created_at: string;
 }
 
+export interface QrPedidoItem {
+  pedidoId: string;
+  pedidoVenta: string;
+  obs: string[];
+}
+
 export interface QrPayload {
-  ob: string;
-  pedido: string;
   bp: string;
   ruc: string;
   razonSocial: string;
+  pedidos: QrPedidoItem[];
 }
 
 export interface Cliente {
@@ -97,5 +117,4 @@ export const ESTADO_LABELS: Record<EstadoPedido, string> = {
   contabilizado: "Contabilizado",
   facturado: "Facturado",
   entregado: "Entregado",
-  waiting: "Waiting",
 };

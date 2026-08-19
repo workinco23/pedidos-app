@@ -1,16 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { consultarDocumento } from "@/lib/sunat";
-import { parsearPayloadQr } from "@/lib/qr";
 import { NextResponse } from "next/server";
 
 interface BodyQr {
   modo: "qr";
-  textoQr: string;
+  pedidoIds: string[];
+  dniReceptor?: string;
+  nombreReceptor?: string;
 }
 interface BodyMostrador {
   modo: "mostrador";
   documento: string;
   razonSocialManual?: string;
+  dniReceptor?: string;
+  nombreReceptor?: string;
 }
 
 export async function POST(request: Request) {
@@ -25,38 +28,43 @@ export async function POST(request: Request) {
   const body = (await request.json()) as BodyQr | BodyMostrador;
 
   if (body.modo === "qr") {
-    const payload = parsearPayloadQr(body.textoQr);
-    if (!payload) {
+    if (!Array.isArray(body.pedidoIds) || body.pedidoIds.length === 0) {
       return NextResponse.json({ error: "Código QR inválido" }, { status: 400 });
     }
 
-    const { data: pedido } = await supabase
+    const { data: pedidosDb } = await supabase
       .from("pedidos")
       .select("*")
-      .eq("ob", payload.ob)
-      .single();
+      .in("id", body.pedidoIds);
 
-    if (!pedido) {
-      return NextResponse.json(
-        { error: `No se encontró el pedido ${payload.ob}` },
-        { status: 404 }
-      );
+    if (!pedidosDb || pedidosDb.length === 0) {
+      return NextResponse.json({ error: "No se encontraron los pedidos del QR" }, { status: 404 });
     }
 
-    const { data, error } = await supabase
+    const { data: registro, error } = await supabase
       .from("registros_vigilancia")
       .insert({
-        pedido_id: pedido.id,
-        documento_cliente: pedido.documento_identidad,
-        razon_social: pedido.razon_social,
+        pedido_id: pedidosDb[0].id,
+        documento_cliente: pedidosDb[0].documento_identidad,
+        razon_social: pedidosDb[0].razon_social,
         tipo_atencion: "recojo_qr",
         usuario_vigilancia_id: user.id,
+        dni_receptor: body.dniReceptor?.trim() || null,
+        nombre_receptor: body.nombreReceptor?.trim() || null,
       })
       .select()
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json(data);
+
+    const { error: errorVinculo } = await supabase.from("registro_vigilancia_pedidos").insert(
+      pedidosDb.map((p) => ({ registro_vigilancia_id: registro.id, pedido_id: p.id }))
+    );
+    if (errorVinculo) {
+      return NextResponse.json({ error: errorVinculo.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ ...registro, pedidos: pedidosDb });
   }
 
   if (body.modo === "mostrador") {
@@ -86,6 +94,8 @@ export async function POST(request: Request) {
         razon_social: razonSocial,
         tipo_atencion: "atencion_mostrador",
         usuario_vigilancia_id: user.id,
+        dni_receptor: body.dniReceptor?.trim() || null,
+        nombre_receptor: body.nombreReceptor?.trim() || null,
       })
       .select()
       .single();

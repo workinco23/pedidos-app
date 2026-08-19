@@ -4,11 +4,10 @@ import type { EstadoPedido, RolUsuario } from "@/lib/types";
 
 const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
   comercial: ["en_extraccion", "facturado"],
-  // almacen puede mover un pedido a Waiting si se traba, y reanudarlo (vuelve a en_extraccion)
-  almacen: ["contabilizado", "entregado", "waiting", "en_extraccion"],
+  almacen: ["contabilizado", "entregado"],
   vigilancia: [],
-  sub_admin: ["en_extraccion", "contabilizado", "facturado", "entregado", "waiting"],
-  admin: ["en_extraccion", "contabilizado", "facturado", "entregado", "waiting"],
+  sub_admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
+  admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
 };
 
 export async function PATCH(

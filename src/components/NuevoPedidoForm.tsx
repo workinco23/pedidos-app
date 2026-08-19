@@ -2,12 +2,22 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { IconoMas } from "@/components/ComercialIcons";
+import { IconoMas, IconoX } from "@/components/ComercialIcons";
 import type { OrigenPedido, TipoComprobante } from "@/lib/types";
 
 export interface PrefillMostrador {
   documento: string;
   razonSocial: string;
+}
+
+interface LineaPedido {
+  pedidoVenta: string;
+  obs: string[];
+  tipoComprobante: TipoComprobante;
+}
+
+function lineaVacia(): LineaPedido {
+  return { pedidoVenta: "", obs: [""], tipoComprobante: "factura" };
 }
 
 interface Props {
@@ -27,12 +37,8 @@ export function NuevoPedidoForm({
   const [vendedor, setVendedor] = useState<string | null>(null);
   const [documento, setDocumento] = useState("");
   const [razonSocial, setRazonSocial] = useState("");
-  const [pedidoVenta, setPedidoVenta] = useState("");
-  const [ob, setOb] = useState("");
   const [origen, setOrigen] = useState<OrigenPedido>("fuerza_ventas");
-  const [esperando, setEsperando] = useState(false);
-  const [tipoComprobante, setTipoComprobante] =
-    useState<TipoComprobante>("factura");
+  const [lineas, setLineas] = useState<LineaPedido[]>([lineaVacia()]);
   const [consultando, setConsultando] = useState(false);
   const [consultandoBp, setConsultandoBp] = useState(false);
   const [registrandoBp, setRegistrandoBp] = useState(false);
@@ -48,6 +54,44 @@ export function NuevoPedidoForm({
     onPrefillConsumido?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillMostrador]);
+
+  function actualizarLinea(indice: number, patch: Partial<LineaPedido>) {
+    setLineas((actuales) =>
+      actuales.map((l, i) => (i === indice ? { ...l, ...patch } : l))
+    );
+  }
+
+  function agregarLinea() {
+    setLineas((actuales) => [...actuales, lineaVacia()]);
+  }
+
+  function quitarLinea(indice: number) {
+    setLineas((actuales) => actuales.filter((_, i) => i !== indice));
+  }
+
+  function actualizarOb(indiceLinea: number, indiceOb: number, valor: string) {
+    setLineas((actuales) =>
+      actuales.map((l, i) =>
+        i === indiceLinea
+          ? { ...l, obs: l.obs.map((o, j) => (j === indiceOb ? valor : o)) }
+          : l
+      )
+    );
+  }
+
+  function agregarOb(indiceLinea: number) {
+    setLineas((actuales) =>
+      actuales.map((l, i) => (i === indiceLinea ? { ...l, obs: [...l.obs, ""] } : l))
+    );
+  }
+
+  function quitarOb(indiceLinea: number, indiceOb: number) {
+    setLineas((actuales) =>
+      actuales.map((l, i) =>
+        i === indiceLinea ? { ...l, obs: l.obs.filter((_, j) => j !== indiceOb) } : l
+      )
+    );
+  }
 
   async function buscarPorDoc(doc: string) {
     const res = await fetch(`/api/clientes/buscar?doc=${encodeURIComponent(doc)}`);
@@ -134,11 +178,8 @@ export function NuevoPedidoForm({
     setVendedor(null);
     setDocumento("");
     setRazonSocial("");
-    setPedidoVenta("");
-    setOb("");
     setOrigen("fuerza_ventas");
-    setEsperando(false);
-    setTipoComprobante("factura");
+    setLineas([lineaVacia()]);
     setError(null);
     setAbierto(false);
   }
@@ -149,24 +190,48 @@ export function NuevoPedidoForm({
     setError(null);
 
     const supabase = createClient();
-    const { error } = await supabase.from("pedidos").insert({
+    const filas = lineas.map((l) => ({
       bp,
       documento_identidad: documento,
       razon_social: razonSocial,
-      pedido_venta: pedidoVenta,
-      ob,
-      tipo_comprobante: tipoComprobante,
-      estado: esperando ? "waiting" : "en_extraccion",
+      pedido_venta: l.pedidoVenta,
+      ob: l.obs[0],
+      tipo_comprobante: l.tipoComprobante,
+      estado: "en_extraccion" as const,
       origen,
+      prioridad: origen === "mostrador",
       usuario_creacion_id: usuarioId,
-    });
+    }));
 
-    setGuardando(false);
-    if (error) {
-      setError(error.message);
+    const { data: creados, error: errorPedidos } = await supabase
+      .from("pedidos")
+      .insert(filas)
+      .select();
+
+    if (errorPedidos || !creados) {
+      setGuardando(false);
+      setError(errorPedidos?.message ?? "No se pudo guardar el pedido");
       return;
     }
 
+    const obsExtra = creados.flatMap((p, indice) =>
+      lineas[indice].obs
+        .slice(1)
+        .map((ob) => ob.trim())
+        .filter(Boolean)
+        .map((ob) => ({ pedido_id: p.id, ob }))
+    );
+
+    if (obsExtra.length > 0) {
+      const { error: errorObs } = await supabase.from("pedido_obs").insert(obsExtra);
+      if (errorObs) {
+        setGuardando(false);
+        setError(`Pedido(s) guardado(s), pero falló un OB adicional: ${errorObs.message}`);
+        return;
+      }
+    }
+
+    setGuardando(false);
     resetFormulario();
   }
 
@@ -185,156 +250,205 @@ export function NuevoPedidoForm({
   return (
     <form
       onSubmit={guardarPedido}
-      className="mb-6 grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-3"
+      className="mb-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5"
     >
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">BP (Código Cliente)</label>
-        <div className="flex gap-2">
-          <input
-            required
-            readOnly={bpBloqueado}
-            value={bp}
-            onChange={(e) => setBp(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-100"
-          />
-          {bpBloqueado ? (
-            <button
-              type="button"
-              onClick={() => {
-                setBpBloqueado(false);
-                setVendedor(null);
-              }}
-              className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Cambiar
-            </button>
-          ) : (
-            <>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">BP (Código Cliente)</label>
+          <div className="flex gap-2">
+            <input
+              required
+              readOnly={bpBloqueado}
+              value={bp}
+              onChange={(e) => setBp(e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-100"
+            />
+            {bpBloqueado ? (
               <button
                 type="button"
-                onClick={consultarPorBp}
-                disabled={consultandoBp || !bp}
-                className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                onClick={() => {
+                  setBpBloqueado(false);
+                  setVendedor(null);
+                }}
+                className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
-                {consultandoBp ? "..." : "Buscar"}
+                Cambiar
               </button>
-              <button
-                type="button"
-                onClick={registrarBp}
-                disabled={registrandoBp || !bp || !razonSocial}
-                className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
-              >
-                {registrandoBp ? "..." : "Registrar BP"}
-              </button>
-            </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={consultarPorBp}
+                  disabled={consultandoBp || !bp}
+                  className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  {consultandoBp ? "..." : "Buscar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={registrarBp}
+                  disabled={registrandoBp || !bp || !razonSocial}
+                  className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  {registrandoBp ? "..." : "Registrar BP"}
+                </button>
+              </>
+            )}
+          </div>
+          {vendedor && (
+            <span className="text-xs text-slate-500">Vendedor asignado: {vendedor}</span>
           )}
         </div>
-        {vendedor && (
-          <span className="text-xs text-slate-500">Vendedor asignado: {vendedor}</span>
-        )}
-      </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">RUC / DNI</label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">RUC / DNI</label>
+          <div className="flex gap-2">
+            <input
+              required
+              value={documento}
+              onChange={(e) => setDocumento(e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={consultarDocumento}
+              disabled={consultando}
+              className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+            >
+              {consultando ? "..." : "Consultar"}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Razón Social</label>
           <input
             required
-            value={documento}
-            onChange={(e) => setDocumento(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            value={razonSocial}
+            onChange={(e) => setRazonSocial(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          <button
-            type="button"
-            onClick={consultarDocumento}
-            disabled={consultando}
-            className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
-          >
-            {consultando ? "..." : "Consultar"}
-          </button>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Origen</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setOrigen("fuerza_ventas")}
+              className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                origen === "fuerza_ventas"
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-300 text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Fuerza de Ventas
+            </button>
+            <button
+              type="button"
+              onClick={() => setOrigen("mostrador")}
+              className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                origen === "mostrador"
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-300 text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Mostrador (Waiting)
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">Razón Social</label>
-        <input
-          required
-          value={razonSocial}
-          onChange={(e) => setRazonSocial(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">Pedido de Venta</label>
-        <input
-          required
-          placeholder="Ej. 40... / 49..."
-          value={pedidoVenta}
-          onChange={(e) => setPedidoVenta(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">OB (Orden de Venta)</label>
-        <input
-          required
-          placeholder="Ej. 60..."
-          value={ob}
-          onChange={(e) => setOb(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">Origen</label>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Pedidos de este cliente
+          </span>
           <button
             type="button"
-            onClick={() => setOrigen("fuerza_ventas")}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
-              origen === "fuerza_ventas"
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-300 text-slate-600 hover:bg-slate-50"
-            }`}
+            onClick={agregarLinea}
+            className="flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900"
           >
-            Fuerza de Ventas
-          </button>
-          <button
-            type="button"
-            onClick={() => setOrigen("mostrador")}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
-              origen === "mostrador"
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-300 text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Mostrador
+            <IconoMas /> Agregar otro pedido
           </button>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500">Tipo de Comprobante</label>
-        <select
-          value={tipoComprobante}
-          onChange={(e) => setTipoComprobante(e.target.value as TipoComprobante)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        >
-          <option value="factura">Factura</option>
-          <option value="boleta">Boleta</option>
-        </select>
-      </div>
+        {lineas.map((linea, indiceLinea) => (
+          <div
+            key={indiceLinea}
+            className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Pedido de Venta</label>
+              <input
+                required
+                placeholder="Ej. 40... / 49..."
+                value={linea.pedidoVenta}
+                onChange={(e) => actualizarLinea(indiceLinea, { pedidoVenta: e.target.value })}
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
 
-      <label className="col-span-full flex items-center gap-2 text-sm text-slate-600">
-        <input
-          type="checkbox"
-          checked={esperando}
-          onChange={(e) => setEsperando(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300"
-        />
-        Marcar como Waiting (queda en espera, no entra al flujo normal todavía)
-      </label>
+            <div className="flex flex-col gap-1 lg:col-span-2">
+              <label className="text-xs font-medium text-slate-500">OB (Orden de Venta)</label>
+              {linea.obs.map((ob, indiceOb) => (
+                <div key={indiceOb} className="flex gap-2">
+                  <input
+                    required
+                    placeholder="Ej. 60..."
+                    value={ob}
+                    onChange={(e) => actualizarOb(indiceLinea, indiceOb, e.target.value)}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  />
+                  {linea.obs.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => quitarOb(indiceLinea, indiceOb)}
+                      className="rounded-md border border-slate-300 px-2 text-slate-500 hover:bg-white"
+                      aria-label="Quitar OB"
+                    >
+                      <IconoX />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => agregarOb(indiceLinea)}
+                className="w-fit text-xs font-medium text-slate-500 hover:text-slate-700"
+              >
+                + Agregar otro OB a este pedido
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Tipo de Comprobante</label>
+              <select
+                value={linea.tipoComprobante}
+                onChange={(e) =>
+                  actualizarLinea(indiceLinea, {
+                    tipoComprobante: e.target.value as TipoComprobante,
+                  })
+                }
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="factura">Factura</option>
+                <option value="boleta">Boleta</option>
+              </select>
+            </div>
+
+            {lineas.length > 1 && (
+              <button
+                type="button"
+                onClick={() => quitarLinea(indiceLinea)}
+                className="flex w-fit items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 lg:col-span-4"
+              >
+                <IconoX /> Quitar este pedido
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
 
       <div className="flex items-end gap-2">
         <button
@@ -342,7 +456,7 @@ export function NuevoPedidoForm({
           disabled={guardando}
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
         >
-          {guardando ? "Guardando..." : "Guardar pedido"}
+          {guardando ? "Guardando..." : "Guardar pedido(s)"}
         </button>
         <button
           type="button"
@@ -353,9 +467,7 @@ export function NuevoPedidoForm({
         </button>
       </div>
 
-      {error && (
-        <p className="col-span-full text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </form>
   );
 }

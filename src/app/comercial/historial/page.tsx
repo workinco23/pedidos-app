@@ -7,8 +7,13 @@ export default async function HistorialPage() {
   const supabase = await createClient();
   const { data: pedidos } = await supabase
     .from("pedidos")
-    .select("*")
+    .select("*, pedido_obs(ob)")
     .order("fecha_registro", { ascending: false });
+
+  const filas = (pedidos ?? []).map((p) => ({
+    ...p,
+    obsAdicionales: (p.pedido_obs ?? []).map((o: { ob: string }) => o.ob),
+  })) as Pedido[];
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -22,7 +27,7 @@ export default async function HistorialPage() {
           ← Volver
         </Link>
       </div>
-      <HistorialPedidosTable pedidos={(pedidos as Pedido[]) ?? []} />
+      <HistorialPedidosTable pedidos={filas} />
     </div>
   );
 }

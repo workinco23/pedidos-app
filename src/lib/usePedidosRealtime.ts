@@ -20,12 +20,15 @@ export function usePedidosRealtime(iniciales: Pedido[]) {
             if (payload.eventType === "INSERT") {
               const nuevo = payload.new as Pedido;
               if (actuales.some((p) => p.id === nuevo.id)) return actuales;
-              return [nuevo, ...actuales];
+              // Los eventos realtime no traen el join a pedido_obs
+              return [{ ...nuevo, obsAdicionales: nuevo.obsAdicionales ?? [] }, ...actuales];
             }
             if (payload.eventType === "UPDATE") {
               const actualizado = payload.new as Pedido;
               return actuales.map((p) =>
-                p.id === actualizado.id ? actualizado : p
+                p.id === actualizado.id
+                  ? { ...actualizado, obsAdicionales: p.obsAdicionales }
+                  : p
               );
             }
             if (payload.eventType === "DELETE") {

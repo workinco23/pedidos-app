@@ -26,7 +26,9 @@ export function HistorialPedidosTable({ pedidos }: { pedidos: Pedido[] }) {
               <td className="px-4 py-3 font-mono text-xs text-slate-700">{p.bp}</td>
               <td className="px-4 py-3 text-slate-700">{p.razon_social}</td>
               <td className="px-4 py-3 font-mono text-xs text-slate-700">{p.pedido_venta}</td>
-              <td className="px-4 py-3 font-mono text-xs text-slate-700">{p.ob}</td>
+              <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                {[p.ob, ...(p.obsAdicionales ?? [])].join(", ")}
+              </td>
               <td className="px-4 py-3 capitalize text-slate-500">{p.tipo_comprobante}</td>
               <td className="px-4 py-3">
                 <EstadoBadge estado={p.estado} />
