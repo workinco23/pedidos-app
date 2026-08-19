@@ -18,14 +18,18 @@ interface GrupoCliente {
 }
 
 function agruparPorCliente(pedidos: Pedido[], enTiendaIds: Set<string>): GrupoCliente[] {
+  // Se agrupa por BP + fecha_registro exacta: los pedidos de un mismo "Guardar
+  // pedido(s)" comparten timestamp (mismo now() de transacción), así que esto
+  // junta solo el lote que se liberó junto, no todo el histórico pendiente del cliente.
   const mapa = new Map<string, Pedido[]>();
   for (const p of pedidos) {
-    const lista = mapa.get(p.bp) ?? [];
+    const clave = `${p.bp}__${p.fecha_registro}`;
+    const lista = mapa.get(clave) ?? [];
     lista.push(p);
-    mapa.set(p.bp, lista);
+    mapa.set(clave, lista);
   }
-  const grupos = Array.from(mapa.entries()).map(([bp, items]) => ({
-    bp,
+  const grupos = Array.from(mapa.values()).map((items) => ({
+    bp: items[0].bp,
     razonSocial: items[0].razon_social,
     pedidos: items,
     enTienda: items.some((p) => enTiendaIds.has(p.id)),
@@ -65,7 +69,7 @@ export function PedidosComercialTable({ iniciales }: { iniciales: Pedido[] }) {
     <div className="flex flex-col gap-3">
       {grupos.map((grupo) => (
         <div
-          key={grupo.bp}
+          key={`${grupo.bp}__${grupo.pedidos[0].fecha_registro}`}
           className="overflow-x-auto rounded-xl border p-3"
           style={{
             backgroundColor: "rgba(30,41,59,0.7)",

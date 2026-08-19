@@ -39,6 +39,20 @@ export function usePedidosRealtime(iniciales: Pedido[]) {
           });
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pedido_obs" },
+        (payload) => {
+          const fila = payload.new as { pedido_id: string; ob: string };
+          setPedidos((actuales) =>
+            actuales.map((p) =>
+              p.id === fila.pedido_id
+                ? { ...p, obsAdicionales: [...p.obsAdicionales, fila.ob] }
+                : p
+            )
+          );
+        }
+      )
       .subscribe();
 
     return () => {
