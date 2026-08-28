@@ -1,16 +1,17 @@
 "use client";
 
-import { usePedidosRealtime } from "@/lib/usePedidosRealtime";
-import { useClientesEnTienda } from "@/lib/useClientesEnTienda";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { IconoCheck } from "@/components/ComercialIcons";
 import { esDelivery } from "@/lib/pedidosFiltros";
 import type { EstadoPedido, Pedido } from "@/lib/types";
 import { format } from "date-fns";
 
-export function PedidosDeliveryAlmacenTable({ iniciales }: { iniciales: Pedido[] }) {
-  const todos = usePedidosRealtime(iniciales);
-  const enTiendaIds = useClientesEnTienda();
+interface Props {
+  todos: Pedido[];
+  enTiendaIds: Set<string>;
+}
+
+export function PedidosDeliveryAlmacenTable({ todos, enTiendaIds }: Props) {
   const items = todos
     .filter((p) => p.estado !== "despachado" && esDelivery(p))
     .sort((a, b) => {

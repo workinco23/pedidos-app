@@ -1,7 +1,5 @@
 "use client";
 
-import { usePedidosRealtime } from "@/lib/usePedidosRealtime";
-import { useClientesEnTienda } from "@/lib/useClientesEnTienda";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { IconoCheck } from "@/components/ComercialIcons";
 import { esContado } from "@/lib/pedidosFiltros";
@@ -13,9 +11,12 @@ const FRAMES = [
   { origen: "mostrador" as const, titulo: "Pedidos Waiting" },
 ];
 
-export function PedidosAlmacenTable({ iniciales }: { iniciales: Pedido[] }) {
-  const todos = usePedidosRealtime(iniciales);
-  const enTiendaIds = useClientesEnTienda();
+interface Props {
+  todos: Pedido[];
+  enTiendaIds: Set<string>;
+}
+
+export function PedidosAlmacenTable({ todos, enTiendaIds }: Props) {
   const pendientes = todos.filter((p) => p.estado !== "entregado" && esContado(p));
 
   async function cambiarEstado(id: string, estado: EstadoPedido) {

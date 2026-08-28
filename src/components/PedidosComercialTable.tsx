@@ -1,54 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { usePedidosRealtime } from "@/lib/usePedidosRealtime";
-import { useClientesEnTienda } from "@/lib/useClientesEnTienda";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { GenerarQrClienteButton } from "@/components/GenerarQrClienteButton";
 import { EditarPedidoModal } from "@/components/EditarPedidoModal";
 import { IconoCheck, IconoLapiz, IconoX } from "@/components/ComercialIcons";
+import { agruparPorCliente } from "@/lib/agruparPorCliente";
 import type { Pedido } from "@/lib/types";
 import { format } from "date-fns";
 
-interface GrupoCliente {
-  bp: string;
-  razonSocial: string;
-  pedidos: Pedido[];
-  enTienda: boolean;
-}
-
-function agruparPorCliente(pedidos: Pedido[], enTiendaIds: Set<string>): GrupoCliente[] {
-  // Se agrupa por BP + fecha_registro exacta: los pedidos de un mismo "Guardar
-  // pedido(s)" comparten timestamp (mismo now() de transacción), así que esto
-  // junta solo el lote que se liberó junto, no todo el histórico pendiente del cliente.
-  const mapa = new Map<string, Pedido[]>();
-  for (const p of pedidos) {
-    const clave = `${p.bp}__${p.fecha_registro}`;
-    const lista = mapa.get(clave) ?? [];
-    lista.push(p);
-    mapa.set(clave, lista);
-  }
-  const grupos = Array.from(mapa.values()).map((items) => ({
-    bp: items[0].bp,
-    razonSocial: items[0].razon_social,
-    pedidos: items,
-    enTienda: items.some((p) => enTiendaIds.has(p.id)),
-  }));
-  return grupos.sort((a, b) => {
-    if (a.enTienda !== b.enTienda) return a.enTienda ? -1 : 1;
-    return b.pedidos[0].fecha_registro.localeCompare(a.pedidos[0].fecha_registro);
-  });
-}
-
 interface Props {
-  iniciales: Pedido[];
+  todos: Pedido[];
+  enTiendaIds: Set<string>;
   filtro?: (p: Pedido) => boolean;
   mostrarQr?: boolean;
 }
 
-export function PedidosComercialTable({ iniciales, filtro, mostrarQr = true }: Props) {
-  const todos = usePedidosRealtime(iniciales);
-  const enTiendaIds = useClientesEnTienda();
+export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = true }: Props) {
   const pedidos = todos
     .filter((p) => p.estado !== "entregado" && p.estado !== "despachado")
     .filter((p) => (filtro ? filtro(p) : true));
