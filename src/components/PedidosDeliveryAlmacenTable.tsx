@@ -80,15 +80,6 @@ export function PedidosDeliveryAlmacenTable({ todos, enTiendaIds }: Props) {
                 </div>
               </div>
               <div className="flex shrink-0 gap-2">
-                {p.estado === "pendiente_creditos" && (
-                  <button
-                    onClick={() => cambiarEstado(p.id, "en_extraccion")}
-                    className="flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:brightness-95"
-                    style={{ backgroundColor: "#B45309" }}
-                  >
-                    <IconoCheck /> Aprobado por Créditos
-                  </button>
-                )}
                 {p.estado === "en_extraccion" && (
                   <button
                     onClick={() => cambiarEstado(p.id, "contabilizado")}

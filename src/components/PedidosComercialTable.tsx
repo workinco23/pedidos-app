@@ -32,6 +32,14 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
     });
   }
 
+  async function aprobarCreditos(id: string) {
+    await fetch(`/api/pedidos/${id}/estado`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado: "en_extraccion" }),
+    });
+  }
+
   async function borrarPedido(id: string) {
     if (!confirm("¿Seguro que quieres borrar este pedido? Esta acción no se puede deshacer.")) {
       return;
@@ -114,6 +122,15 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
                       <EstadoBadge estado={p.estado} />
                     </span>
                     <div className="flex flex-wrap gap-1.5">
+                      {p.estado === "pendiente_creditos" && (
+                        <button
+                          onClick={() => aprobarCreditos(p.id)}
+                          className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold text-white hover:brightness-95"
+                          style={{ backgroundColor: "#B45309" }}
+                        >
+                          <IconoCheck /> Aprobado por Créditos
+                        </button>
+                      )}
                       {p.estado === "contabilizado" && p.condicion_pago === "contado" && (
                         <button
                           onClick={() => marcarFacturado(p.id)}
