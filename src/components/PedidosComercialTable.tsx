@@ -114,7 +114,7 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
                       <EstadoBadge estado={p.estado} />
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {p.estado === "contabilizado" && (
+                      {p.estado === "contabilizado" && p.condicion_pago === "contado" && (
                         <button
                           onClick={() => marcarFacturado(p.id)}
                           className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"

@@ -97,6 +97,14 @@ export function PedidosDeliveryAlmacenTable({ todos, enTiendaIds }: Props) {
                     <IconoCheck /> Contabilizado
                   </button>
                 )}
+                {p.estado === "contabilizado" && p.condicion_pago === "credito" && (
+                  <button
+                    onClick={() => cambiarEstado(p.id, "facturado")}
+                    className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <IconoCheck /> Marcar Facturado
+                  </button>
+                )}
                 {p.estado === "facturado" && (
                   <button
                     onClick={() => cambiarEstado(p.id, "despachado")}

@@ -7,8 +7,8 @@ import type { EstadoPedido, Pedido } from "@/lib/types";
 import { format } from "date-fns";
 
 const FRAMES = [
-  { origen: "fuerza_ventas" as const, titulo: "Fuerza de Ventas" },
   { origen: "mostrador" as const, titulo: "Pedidos Waiting" },
+  { origen: "fuerza_ventas" as const, titulo: "Fuerza de Ventas" },
 ];
 
 interface Props {

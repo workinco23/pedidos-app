@@ -4,7 +4,7 @@ import type { EstadoPedido, RolUsuario } from "@/lib/types";
 
 const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
   comercial: ["en_extraccion", "facturado"],
-  almacen: ["en_extraccion", "contabilizado", "entregado", "despachado"],
+  almacen: ["en_extraccion", "contabilizado", "facturado", "entregado", "despachado"],
   vigilancia: [],
   sub_admin: [
     "en_extraccion",
