@@ -4,10 +4,24 @@ import type { EstadoPedido, RolUsuario } from "@/lib/types";
 
 const ESTADOS_PERMITIDOS_POR_ROL: Record<RolUsuario, EstadoPedido[]> = {
   comercial: ["en_extraccion", "facturado"],
-  almacen: ["contabilizado", "entregado"],
+  almacen: ["en_extraccion", "contabilizado", "entregado", "despachado"],
   vigilancia: [],
-  sub_admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
-  admin: ["en_extraccion", "contabilizado", "facturado", "entregado"],
+  sub_admin: [
+    "en_extraccion",
+    "contabilizado",
+    "facturado",
+    "entregado",
+    "pendiente_creditos",
+    "despachado",
+  ],
+  admin: [
+    "en_extraccion",
+    "contabilizado",
+    "facturado",
+    "entregado",
+    "pendiente_creditos",
+    "despachado",
+  ],
 };
 
 export async function PATCH(

@@ -3,10 +3,12 @@ import { IconoCheck } from "@/components/ComercialIcons";
 
 const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
   waiting: { bg: "#FEE2E2", texto: "#B91C1C" },
+  pendiente_creditos: { bg: "#FDE68A", texto: "#92400E" },
   en_extraccion: { bg: "#FEF3C7", texto: "#B45309" },
   contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
   facturado: { bg: "#E0F2FE", texto: "#0284C7" },
   entregado: { bg: "#DCFCE7", texto: "#16A34A" },
+  despachado: { bg: "#DCFCE7", texto: "#16A34A" },
 };
 
 export function EstadoBadge({ estado }: { estado: EstadoPedido }) {

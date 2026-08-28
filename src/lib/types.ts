@@ -4,12 +4,18 @@ export type TipoComprobante = "factura" | "boleta";
 
 export type EstadoPedido =
   | "waiting"
+  | "pendiente_creditos"
   | "en_extraccion"
   | "contabilizado"
   | "facturado"
-  | "entregado";
+  | "entregado"
+  | "despachado";
 
 export type OrigenPedido = "fuerza_ventas" | "mostrador";
+
+export type CondicionPago = "contado" | "credito";
+
+export type MetodoEntrega = "pickup" | "delivery";
 
 export type TipoAtencion = "recojo_qr" | "atencion_mostrador";
 
@@ -33,6 +39,8 @@ export interface Pedido {
   estado: EstadoPedido;
   origen: OrigenPedido;
   prioridad: boolean;
+  condicion_pago: CondicionPago;
+  metodo_entrega: MetodoEntrega;
   qr_codigo_hash: string | null;
   usuario_creacion_id: string | null;
   updated_at: string;
@@ -115,8 +123,10 @@ export interface ResultadoBusquedaCliente {
 
 export const ESTADO_LABELS: Record<EstadoPedido, string> = {
   waiting: "Waiting",
+  pendiente_creditos: "Pendiente Créditos",
   en_extraccion: "En Extracción",
   contabilizado: "Contabilizado",
   facturado: "Facturado",
   entregado: "Entregado",
+  despachado: "Despachado",
 };

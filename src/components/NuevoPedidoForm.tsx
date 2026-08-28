@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { IconoMas, IconoX } from "@/components/ComercialIcons";
-import type { OrigenPedido, TipoComprobante } from "@/lib/types";
+import type { CondicionPago, MetodoEntrega, OrigenPedido, TipoComprobante } from "@/lib/types";
 
 export interface PrefillMostrador {
   documento: string;
@@ -38,6 +38,8 @@ export function NuevoPedidoForm({
   const [documento, setDocumento] = useState("");
   const [razonSocial, setRazonSocial] = useState("");
   const [origen, setOrigen] = useState<OrigenPedido>("fuerza_ventas");
+  const [condicionPago, setCondicionPago] = useState<CondicionPago>("contado");
+  const [metodoEntrega, setMetodoEntrega] = useState<MetodoEntrega>("pickup");
   const [lineas, setLineas] = useState<LineaPedido[]>([lineaVacia()]);
   const [consultando, setConsultando] = useState(false);
   const [consultandoBp, setConsultandoBp] = useState(false);
@@ -50,6 +52,8 @@ export function NuevoPedidoForm({
     setDocumento(prefillMostrador.documento);
     setRazonSocial(prefillMostrador.razonSocial);
     setOrigen("mostrador");
+    setCondicionPago("contado");
+    setMetodoEntrega("pickup");
     setAbierto(true);
     onPrefillConsumido?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -179,6 +183,8 @@ export function NuevoPedidoForm({
     setDocumento("");
     setRazonSocial("");
     setOrigen("fuerza_ventas");
+    setCondicionPago("contado");
+    setMetodoEntrega("pickup");
     setLineas([lineaVacia()]);
     setError(null);
     setAbierto(false);
@@ -197,9 +203,11 @@ export function NuevoPedidoForm({
       pedido_venta: l.pedidoVenta,
       ob: l.obs[0],
       tipo_comprobante: l.tipoComprobante,
-      estado: "en_extraccion" as const,
+      estado: condicionPago === "credito" ? ("pendiente_creditos" as const) : ("en_extraccion" as const),
       origen,
       prioridad: origen === "mostrador",
+      condicion_pago: condicionPago,
+      metodo_entrega: metodoEntrega,
       usuario_creacion_id: usuarioId,
     }));
 
@@ -346,7 +354,11 @@ export function NuevoPedidoForm({
             </button>
             <button
               type="button"
-              onClick={() => setOrigen("mostrador")}
+              onClick={() => {
+                setOrigen("mostrador");
+                setCondicionPago("contado");
+                setMetodoEntrega("pickup");
+              }}
               className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
                 origen === "mostrador"
                   ? "border-slate-900 bg-slate-900 text-white"
@@ -357,6 +369,66 @@ export function NuevoPedidoForm({
             </button>
           </div>
         </div>
+
+        {origen !== "mostrador" && (
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Condición de Pago</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCondicionPago("contado")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                    condicionPago === "contado"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Contado
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCondicionPago("credito")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                    condicionPago === "credito"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Crédito
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-500">Método de Entrega</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMetodoEntrega("pickup")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                    metodoEntrega === "pickup"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Pickup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetodoEntrega("delivery")}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+                    metodoEntrega === "delivery"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  Delivery
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">

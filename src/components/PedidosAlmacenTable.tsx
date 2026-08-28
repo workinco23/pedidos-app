@@ -4,6 +4,7 @@ import { usePedidosRealtime } from "@/lib/usePedidosRealtime";
 import { useClientesEnTienda } from "@/lib/useClientesEnTienda";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { IconoCheck } from "@/components/ComercialIcons";
+import { esContado } from "@/lib/pedidosFiltros";
 import type { EstadoPedido, Pedido } from "@/lib/types";
 import { format } from "date-fns";
 
@@ -15,7 +16,7 @@ const FRAMES = [
 export function PedidosAlmacenTable({ iniciales }: { iniciales: Pedido[] }) {
   const todos = usePedidosRealtime(iniciales);
   const enTiendaIds = useClientesEnTienda();
-  const pendientes = todos.filter((p) => p.estado !== "entregado");
+  const pendientes = todos.filter((p) => p.estado !== "entregado" && esContado(p));
 
   async function cambiarEstado(id: string, estado: EstadoPedido) {
     await fetch(`/api/pedidos/${id}/estado`, {

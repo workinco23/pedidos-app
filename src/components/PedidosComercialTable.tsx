@@ -40,10 +40,18 @@ function agruparPorCliente(pedidos: Pedido[], enTiendaIds: Set<string>): GrupoCl
   });
 }
 
-export function PedidosComercialTable({ iniciales }: { iniciales: Pedido[] }) {
+interface Props {
+  iniciales: Pedido[];
+  filtro?: (p: Pedido) => boolean;
+  mostrarQr?: boolean;
+}
+
+export function PedidosComercialTable({ iniciales, filtro, mostrarQr = true }: Props) {
   const todos = usePedidosRealtime(iniciales);
   const enTiendaIds = useClientesEnTienda();
-  const pedidos = todos.filter((p) => p.estado !== "entregado");
+  const pedidos = todos
+    .filter((p) => p.estado !== "entregado" && p.estado !== "despachado")
+    .filter((p) => (filtro ? filtro(p) : true));
   const grupos = agruparPorCliente(pedidos, enTiendaIds);
   const [editando, setEditando] = useState<Pedido | null>(null);
   const [borrando, setBorrando] = useState<string | null>(null);
@@ -94,7 +102,7 @@ export function PedidosComercialTable({ iniciales }: { iniciales: Pedido[] }) {
                 BP {grupo.bp} · {grupo.pedidos.length} pedido(s)
               </p>
             </div>
-            <GenerarQrClienteButton pedidos={grupo.pedidos} />
+            {mostrarQr && <GenerarQrClienteButton pedidos={grupo.pedidos} />}
           </div>
 
           <div className="min-w-[860px]">
