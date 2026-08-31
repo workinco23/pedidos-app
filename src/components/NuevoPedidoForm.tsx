@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { IconoMas, IconoX } from "@/components/ComercialIcons";
-import type { CondicionPago, MetodoEntrega, OrigenPedido, TipoComprobante } from "@/lib/types";
+import type {
+  CondicionPago,
+  MetodoEntrega,
+  OrigenPedido,
+  SugerenciaCliente,
+  TipoComprobante,
+} from "@/lib/types";
 
 export interface PrefillMostrador {
   documento: string;
@@ -46,11 +52,20 @@ export function NuevoPedidoForm({
   const [registrandoBp, setRegistrandoBp] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sugerencias, setSugerencias] = useState<SugerenciaCliente[]>([]);
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
+  const razonSocialProgramatica = useRef(false);
+
+  function setRazonSocialSilencioso(valor: string) {
+    razonSocialProgramatica.current = true;
+    setRazonSocial(valor);
+  }
 
   useEffect(() => {
     if (!prefillMostrador) return;
     setDocumento(prefillMostrador.documento);
-    setRazonSocial(prefillMostrador.razonSocial);
+    setRazonSocialSilencioso(prefillMostrador.razonSocial);
     setOrigen("mostrador");
     setCondicionPago("contado");
     setMetodoEntrega("pickup");
@@ -58,6 +73,59 @@ export function NuevoPedidoForm({
     onPrefillConsumido?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillMostrador]);
+
+  useEffect(() => {
+    if (razonSocialProgramatica.current) {
+      razonSocialProgramatica.current = false;
+      setSugerencias([]);
+      setMostrarSugerencias(false);
+      return;
+    }
+    if (bpBloqueado || razonSocial.trim().length < 2) {
+      setSugerencias([]);
+      return;
+    }
+    setBuscandoSugerencias(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/clientes/buscar-nombre?q=${encodeURIComponent(razonSocial.trim())}`
+        );
+        const data = await res.json();
+        setSugerencias(res.ok ? (data.resultados as SugerenciaCliente[]) : []);
+        setMostrarSugerencias(true);
+      } catch {
+        setSugerencias([]);
+      } finally {
+        setBuscandoSugerencias(false);
+      }
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [razonSocial, bpBloqueado]);
+
+  async function seleccionarSugerencia(sugerencia: SugerenciaCliente) {
+    setMostrarSugerencias(false);
+    setSugerencias([]);
+    setRazonSocialSilencioso(sugerencia.razon_social);
+    setDocumento(sugerencia.ruc_dni);
+    if (!sugerencia.bp) {
+      setBp("");
+      setBpBloqueado(false);
+      return;
+    }
+    setConsultandoBp(true);
+    setError(null);
+    try {
+      const data = await buscarPorDoc(sugerencia.bp);
+      setBp(data.bp ?? sugerencia.bp);
+      setBpBloqueado(true);
+      setVendedor(data.vendedor_nombre ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar el cliente");
+    } finally {
+      setConsultandoBp(false);
+    }
+  }
 
   function actualizarLinea(indice: number, patch: Partial<LineaPedido>) {
     setLineas((actuales) =>
@@ -117,7 +185,7 @@ export function NuevoPedidoForm({
     setVendedor(null);
     try {
       const data = await buscarPorDoc(documento);
-      setRazonSocial(data.razon_social);
+      setRazonSocialSilencioso(data.razon_social);
       if (data.registrado && data.bp) {
         setBp(data.bp);
         setBpBloqueado(true);
@@ -144,7 +212,7 @@ export function NuevoPedidoForm({
         throw new Error("No se encontró ningún cliente con ese BP");
       }
       setDocumento(data.ruc_dni);
-      setRazonSocial(data.razon_social);
+      setRazonSocialSilencioso(data.razon_social);
       setBp(data.bp);
       setBpBloqueado(true);
       setVendedor(data.vendedor_nombre ?? null);
@@ -353,14 +421,45 @@ export function NuevoPedidoForm({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="relative flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">Razón Social</label>
           <input
             required
+            autoComplete="off"
             value={razonSocial}
-            onChange={(e) => setRazonSocial(e.target.value)}
+            onChange={(e) => {
+              setRazonSocial(e.target.value);
+              setBpBloqueado(false);
+              setVendedor(null);
+            }}
+            onFocus={() => sugerencias.length > 0 && setMostrarSugerencias(true)}
+            onBlur={() => setMostrarSugerencias(false)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
+          {mostrarSugerencias && (buscandoSugerencias || sugerencias.length > 0) && (
+            <ul className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+              {buscandoSugerencias ? (
+                <li className="px-3 py-2 text-xs text-slate-400">Buscando...</li>
+              ) : (
+                sugerencias.map((s) => (
+                  <li key={s.ruc_dni}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => seleccionarSugerencia(s)}
+                      className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    >
+                      <span className="font-medium text-brand-navy">{s.razon_social}</span>
+                      <span className="text-xs text-slate-500">
+                        {s.ruc_dni}
+                        {s.bp ? ` · BP ${s.bp}` : " · sin BP"}
+                      </span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
 
         <div className="flex flex-col gap-1">

@@ -33,15 +33,19 @@ export async function GET(request: Request) {
     .or(filtroOr)
     .maybeSingle();
 
-  if (cliente?.bp) {
-    const { data: cartera } = await supabase
-      .from("cartera")
-      .select("vendedor_nombre")
-      .eq("bp", cliente.bp)
-      .maybeSingle();
+  if (cliente) {
+    const cartera = cliente.bp
+      ? (
+          await supabase
+            .from("cartera")
+            .select("vendedor_nombre")
+            .eq("bp", cliente.bp)
+            .maybeSingle()
+        ).data
+      : null;
 
     const resultado: ResultadoBusquedaCliente = {
-      registrado: true,
+      registrado: Boolean(cliente.bp),
       ruc_dni: cliente.ruc_dni,
       bp: cliente.bp,
       razon_social: cliente.razon_social,
@@ -51,7 +55,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { razonSocial, documento } = await consultarDocumento(cliente?.ruc_dni ?? doc);
+    const { razonSocial, documento } = await consultarDocumento(doc);
     const resultado: ResultadoBusquedaCliente = {
       registrado: false,
       ruc_dni: documento,

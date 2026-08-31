@@ -121,6 +121,12 @@ export interface ResultadoBusquedaCliente {
   vendedor_nombre: string | null;
 }
 
+export interface SugerenciaCliente {
+  ruc_dni: string;
+  bp: string | null;
+  razon_social: string;
+}
+
 export const ESTADO_LABELS: Record<EstadoPedido, string> = {
   waiting: "Waiting",
   pendiente_creditos: "Pendiente Créditos",
