@@ -176,6 +176,14 @@ export function NuevoPedidoForm({
     }
   }
 
+  useEffect(() => {
+    if (!abierto) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [abierto]);
+
   function resetFormulario() {
     setBp("");
     setBpBloqueado(false);
@@ -255,11 +263,29 @@ export function NuevoPedidoForm({
   }
 
   return (
-    <form
-      onSubmit={guardarPedido}
-      className="mb-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-brand-navy-deep/70 p-4 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) resetFormulario();
+      }}
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <form
+        onSubmit={guardarPedido}
+        className="relative flex w-full max-w-4xl flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-2xl my-8"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-brand-navy">Nuevo pedido</h2>
+          <button
+            type="button"
+            onClick={resetFormulario}
+            aria-label="Cerrar"
+            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <IconoX />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">BP (Código Cliente)</label>
           <div className="flex gap-2">
@@ -538,7 +564,8 @@ export function NuevoPedidoForm({
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-    </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+    </div>
   );
 }
