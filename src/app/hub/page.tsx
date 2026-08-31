@@ -64,10 +64,10 @@ export default async function HubPage() {
   const paneles = PANELES.filter((p) => p.rolesPermitidos.includes(usuario.rol));
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#F4F8FA" }}>
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <HubHeader usuario={usuario} />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        <p className="mb-6 text-sm text-[#64748B]">Elige el panel al que quieres entrar.</p>
+        <p className="mb-6 text-sm text-slate-500">Elige el panel al que quieres entrar.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paneles.map(({ Icono, ...panel }) => (
             <Link
@@ -76,15 +76,12 @@ export default async function HubPage() {
               target={panel.externo ? "_blank" : undefined}
               className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition active:scale-[0.98] sm:flex-col sm:gap-3 sm:hover:-translate-y-0.5 sm:hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
             >
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
-                style={{ backgroundColor: "#eaf1fb", color: "#002F6C" }}
-              >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-navy-50 text-brand-navy">
                 <Icono />
               </span>
               <span className="flex flex-col">
-                <span className="text-lg font-bold text-[#1E293B]">{panel.titulo}</span>
-                <span className="text-sm text-[#4B5563]">{panel.descripcion}</span>
+                <span className="text-lg font-bold text-brand-navy">{panel.titulo}</span>
+                <span className="text-sm text-slate-600">{panel.descripcion}</span>
               </span>
             </Link>
           ))}

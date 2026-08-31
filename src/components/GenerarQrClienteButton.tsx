@@ -93,8 +93,7 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold hover:brightness-95"
-        style={{ backgroundColor: "#FFCD00", borderColor: "#B8930A", color: "#1E1E1E" }}
+        className="flex items-center gap-1.5 rounded-md border border-brand-yellow-dark bg-brand-yellow px-2.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-yellow-dark"
       >
         <IconoQr /> Generar QR / Plantilla
       </button>

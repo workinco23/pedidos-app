@@ -4,6 +4,28 @@
   --background: #ffffff;
   --foreground: #171717;
   color-scheme: light;
+
+  /* Marca Ferreyros/CAT — una sola escala de navy en vez de 5 sueltas */
+  --color-brand-navy-deep: #0b1325; /* fondo de shell de panel (el más oscuro) */
+  --color-brand-navy: #0f172a; /* headers, cabeceras de tabla */
+  --color-brand-navy-soft: #1e293b; /* superficies elevadas sobre navy: footer, botón secundario */
+  --color-brand-navy-50: #eef2f8; /* tinte navy claro para chips/íconos sobre blanco */
+
+  /* Acento CAT/Ferreyros (del logo) — reemplaza los azules sueltos como color primario de acción */
+  --color-brand-yellow: #fdb913;
+  --color-brand-yellow-dark: #d69e0a;
+
+  /* Estados de pedido — única fuente de verdad, reusada en EstadoBadge, Vigilancia y Pantalla Pública */
+  --color-status-danger-bg: #fee2e2;
+  --color-status-danger-text: #b91c1c;
+  --color-status-warning-soft-bg: #fde68a;
+  --color-status-warning-soft-text: #92400e;
+  --color-status-warning-bg: #fef3c7;
+  --color-status-warning-text: #b45309;
+  --color-status-info-bg: #e0f2fe;
+  --color-status-info-text: #0284c7;
+  --color-status-success-bg: #dcfce7;
+  --color-status-success-text: #16a34a;
 }
 
 @theme inline {
@@ -11,6 +33,23 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-brand-navy-deep: var(--color-brand-navy-deep);
+  --color-brand-navy: var(--color-brand-navy);
+  --color-brand-navy-soft: var(--color-brand-navy-soft);
+  --color-brand-navy-50: var(--color-brand-navy-50);
+  --color-brand-yellow: var(--color-brand-yellow);
+  --color-brand-yellow-dark: var(--color-brand-yellow-dark);
+  --color-status-danger-bg: var(--color-status-danger-bg);
+  --color-status-danger-text: var(--color-status-danger-text);
+  --color-status-warning-soft-bg: var(--color-status-warning-soft-bg);
+  --color-status-warning-soft-text: var(--color-status-warning-soft-text);
+  --color-status-warning-bg: var(--color-status-warning-bg);
+  --color-status-warning-text: var(--color-status-warning-text);
+  --color-status-info-bg: var(--color-status-info-bg);
+  --color-status-info-text: var(--color-status-info-text);
+  --color-status-success-bg: var(--color-status-success-bg);
+  --color-status-success-text: var(--color-status-success-text);
 }
 
 body {

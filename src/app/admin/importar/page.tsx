@@ -62,8 +62,7 @@ function TarjetaImportacion({
         type="button"
         onClick={importar}
         disabled={!archivo || subiendo}
-        className="w-fit rounded-md px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-60"
-        style={{ backgroundColor: "#1E3A8A" }}
+        className="w-fit rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy shadow-lg transition hover:bg-brand-yellow-dark disabled:opacity-60"
       >
         {subiendo ? "Importando..." : "Importar"}
       </button>

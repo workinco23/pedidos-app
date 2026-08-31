@@ -1,22 +1,20 @@
 import { ESTADO_LABELS, type EstadoPedido } from "@/lib/types";
 import { IconoCheck } from "@/components/ComercialIcons";
 
-const ESTILOS: Record<EstadoPedido, { bg: string; texto: string }> = {
-  waiting: { bg: "#FEE2E2", texto: "#B91C1C" },
-  pendiente_creditos: { bg: "#FDE68A", texto: "#92400E" },
-  en_extraccion: { bg: "#FEF3C7", texto: "#B45309" },
-  contabilizado: { bg: "#E0F2FE", texto: "#0284C7" },
-  facturado: { bg: "#E0F2FE", texto: "#0284C7" },
-  entregado: { bg: "#DCFCE7", texto: "#16A34A" },
-  despachado: { bg: "#DCFCE7", texto: "#16A34A" },
+const ESTILOS: Record<EstadoPedido, string> = {
+  waiting: "bg-status-danger-bg text-status-danger-text",
+  pendiente_creditos: "bg-status-warning-soft-bg text-status-warning-soft-text",
+  en_extraccion: "bg-status-warning-bg text-status-warning-text",
+  contabilizado: "bg-status-info-bg text-status-info-text",
+  facturado: "bg-status-info-bg text-status-info-text",
+  entregado: "bg-status-success-bg text-status-success-text",
+  despachado: "bg-status-success-bg text-status-success-text",
 };
 
 export function EstadoBadge({ estado }: { estado: EstadoPedido }) {
-  const { bg, texto } = ESTILOS[estado];
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
-      style={{ backgroundColor: bg, color: texto }}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${ESTILOS[estado]}`}
     >
       <IconoCheck />
       {ESTADO_LABELS[estado]}

@@ -80,12 +80,11 @@ export function AlertaClienteEnTienda() {
       {avisos.map((a) => (
         <div
           key={a.id}
-          className="flex items-center justify-between rounded-md border px-4 py-2 text-sm"
-          style={
+          className={`flex items-center justify-between rounded-md border px-4 py-2 text-sm ${
             a.tipo === "llegada"
-              ? { borderColor: "#7DD3FC", backgroundColor: "#F0F9FF", color: "#075985" }
-              : { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC", color: "#475569" }
-          }
+              ? "border-sky-300 bg-status-info-bg text-status-info-text"
+              : "border-slate-300 bg-slate-50 text-slate-600"
+          }`}
         >
           <span>{a.texto}</span>
           <button

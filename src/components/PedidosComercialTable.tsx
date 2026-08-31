@@ -103,10 +103,8 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
                 return (
                   <div
                     key={p.id}
-                    className="grid items-center gap-2 rounded-[10px] px-3 py-3 text-sm"
+                    className={`grid items-center gap-2 rounded-[10px] px-3 py-3 text-sm text-brand-navy ${enTienda ? "bg-status-danger-bg" : "bg-white"}`}
                     style={{
-                      color: "#0F172A",
-                      backgroundColor: enTienda ? "#FEF2F2" : "#FFFFFF",
                       gridTemplateColumns: "1fr 1fr 1.6fr 0.8fr 1fr 1.6fr",
                     }}
                   >

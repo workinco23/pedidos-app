@@ -21,8 +21,8 @@ export default async function HistorialPage() {
         <h1 className="text-lg font-semibold text-white">Historial de pedidos</h1>
         <Link
           href="/comercial"
-          className="rounded-md border px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/5"
-          style={{ borderColor: "rgba(255,255,255,0.15)", backgroundColor: "#1e293b" }}
+          className="rounded-md border bg-brand-navy-soft px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/5"
+          style={{ borderColor: "rgba(255,255,255,0.15)" }}
         >
           ← Volver
         </Link>

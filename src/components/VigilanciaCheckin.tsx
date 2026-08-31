@@ -148,7 +148,7 @@ export function VigilanciaCheckin() {
           className="rounded-md px-3 py-1.5 text-sm font-medium transition"
           style={
             modo === "qr"
-              ? { backgroundColor: "#1E3A8A", color: "#fff" }
+              ? { backgroundColor: "var(--color-brand-yellow)", color: "var(--color-brand-navy)" }
               : { backgroundColor: "rgba(255,255,255,0.08)", color: "#CBD5E1" }
           }
         >
@@ -159,7 +159,7 @@ export function VigilanciaCheckin() {
           className="rounded-md px-3 py-1.5 text-sm font-medium transition"
           style={
             modo === "mostrador"
-              ? { backgroundColor: "#1E3A8A", color: "#fff" }
+              ? { backgroundColor: "var(--color-brand-yellow)", color: "var(--color-brand-navy)" }
               : { backgroundColor: "rgba(255,255,255,0.08)", color: "#CBD5E1" }
           }
         >
@@ -171,7 +171,7 @@ export function VigilanciaCheckin() {
         pedidosQr ? (
           <div className="flex flex-col gap-3">
             <div className="rounded-md bg-white p-4">
-              <p className="text-sm font-semibold text-[#0F172A]">
+              <p className="text-sm font-semibold text-brand-navy">
                 {pedidosQr[0].razon_social}
               </p>
               <p className="mb-3 text-xs text-slate-400">RUC/DNI {pedidosQr[0].documento_identidad}</p>
@@ -209,8 +209,7 @@ export function VigilanciaCheckin() {
               <button
                 onClick={confirmarIngresoQr}
                 disabled={procesando}
-                className="rounded-md px-4 py-2 text-sm font-semibold hover:brightness-95 disabled:opacity-60"
-                style={{ backgroundColor: "#FFCD00", color: "#1E1E1E" }}
+                className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-yellow-dark disabled:opacity-60"
               >
                 {procesando ? "Registrando..." : "Confirmar ingreso"}
               </button>
@@ -231,8 +230,7 @@ export function VigilanciaCheckin() {
             {mensaje && !cargandoDetalle && (
               <button
                 onClick={escanearSiguiente}
-                className="rounded-md px-4 py-2 text-sm font-semibold hover:brightness-95"
-                style={{ backgroundColor: "#FFCD00", color: "#1E1E1E" }}
+                className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-yellow-dark"
               >
                 Escanear siguiente
               </button>
@@ -277,8 +275,7 @@ export function VigilanciaCheckin() {
           <button
             onClick={registrarMostrador}
             disabled={procesando || !documento}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110 disabled:opacity-60"
-            style={{ backgroundColor: "#1E3A8A" }}
+            className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy shadow-lg transition hover:bg-brand-yellow-dark disabled:opacity-60"
           >
             {procesando ? "Registrando..." : "Registrar y notificar a Comercial"}
           </button>
@@ -287,8 +284,7 @@ export function VigilanciaCheckin() {
 
       {mensaje && (
         <p
-          className="mt-4 text-sm font-medium"
-          style={{ color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171" }}
+          className={`mt-4 text-sm font-medium ${mensaje.tipo === "ok" ? "text-green-400" : "text-red-400"}`}
         >
           {mensaje.texto}
         </p>

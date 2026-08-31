@@ -13,12 +13,12 @@ const ROL_LABEL: Record<RolUsuario, string> = {
   admin: "Super Administrador",
 };
 
-const ROL_COLOR: Record<RolUsuario, { bg: string; texto: string }> = {
-  comercial: { bg: "#EAF1FB", texto: "#002F6C" },
-  almacen: { bg: "#EAF1FB", texto: "#002F6C" },
-  vigilancia: { bg: "#EAF1FB", texto: "#002F6C" },
-  sub_admin: { bg: "#FEF3C7", texto: "#92400E" },
-  admin: { bg: "#DCFCE7", texto: "#166534" },
+const ROL_COLOR: Record<RolUsuario, string> = {
+  comercial: "bg-brand-navy-50 text-brand-navy",
+  almacen: "bg-brand-navy-50 text-brand-navy",
+  vigilancia: "bg-brand-navy-50 text-brand-navy",
+  sub_admin: "bg-status-warning-bg text-status-warning-text",
+  admin: "bg-status-success-bg text-status-success-text",
 };
 
 export function HubHeader({ usuario }: { usuario: Usuario }) {
@@ -42,23 +42,20 @@ export function HubHeader({ usuario }: { usuario: Usuario }) {
           className="h-7 w-auto object-contain sm:h-8"
         />
         <span className="hidden h-6 w-px bg-slate-200 sm:block" />
-        <h1 className="text-base font-bold text-[#1E293B] sm:text-lg">Centro de Control</h1>
+        <h1 className="text-base font-bold text-brand-navy sm:text-lg">Centro de Control</h1>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-medium text-[#1E293B]">{usuario.nombre}</p>
-          <p className="text-xs text-[#64748B]">{usuario.email}</p>
+          <p className="text-sm font-medium text-brand-navy">{usuario.nombre}</p>
+          <p className="text-xs text-slate-500">{usuario.email}</p>
         </div>
-        <span
-          className="rounded-full px-3 py-1 text-xs font-semibold"
-          style={{ backgroundColor: ROL_COLOR[usuario.rol].bg, color: ROL_COLOR[usuario.rol].texto }}
-        >
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ROL_COLOR[usuario.rol]}`}>
           {ROL_LABEL[usuario.rol]}
         </span>
         <button
           onClick={cerrarSesion}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-[#1E293B] hover:bg-slate-50"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-brand-navy hover:bg-slate-50"
         >
           Cerrar sesión
         </button>

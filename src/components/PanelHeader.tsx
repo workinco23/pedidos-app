@@ -18,10 +18,7 @@ export function PanelHeader({ usuario, titulo }: { usuario: Usuario; titulo: str
   }
 
   return (
-    <header
-      className="relative flex items-center justify-between overflow-hidden px-6 py-4"
-      style={{ backgroundColor: "#0F172A" }}
-    >
+    <header className="relative flex items-center justify-between overflow-hidden bg-brand-navy px-6 py-4">
       <h1 className="relative z-10 text-lg font-semibold text-white">{titulo}</h1>
 
       {/* Placa trapezoidal con el logo */}
@@ -63,8 +60,8 @@ export function PanelHeader({ usuario, titulo }: { usuario: Usuario; titulo: str
         </div>
         <button
           onClick={cerrarSesion}
-          className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/5"
-          style={{ borderColor: "rgba(255,255,255,0.15)", backgroundColor: "#1e293b" }}
+          className="flex items-center gap-1.5 rounded-md border bg-brand-navy-soft px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/5"
+          style={{ borderColor: "rgba(255,255,255,0.15)" }}
         >
           Cerrar sesión
           <IconoLogout />

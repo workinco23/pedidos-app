@@ -132,7 +132,7 @@ export function VigilanciaActivos({
               className="flex items-center justify-between gap-3 rounded-[10px] bg-white px-4 py-3"
             >
               <div>
-                <p className="text-sm font-semibold text-[#0F172A]">{r.razon_social}</p>
+                <p className="text-sm font-semibold text-brand-navy">{r.razon_social}</p>
                 <p className="text-xs text-slate-400">
                   {LABEL_ATENCION[r.tipo_atencion]} · Ingreso{" "}
                   {format(new Date(r.fecha_ingreso), "HH:mm")}
@@ -161,8 +161,7 @@ export function VigilanciaActivos({
                 </span>
                 <button
                   onClick={() => setRegistroCheckout(r)}
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow transition hover:brightness-110"
-                  style={{ backgroundColor: "#1E3A8A" }}
+                  className="rounded-md bg-brand-yellow px-3 py-1.5 text-xs font-semibold text-brand-navy shadow transition hover:bg-brand-yellow-dark"
                 >
                   Registrar salida
                 </button>
@@ -212,8 +211,7 @@ export function VigilanciaActivos({
               <button
                 onClick={confirmarCheckout}
                 disabled={enviando}
-                className="rounded-md px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-                style={{ backgroundColor: "#1E3A8A" }}
+                className="rounded-md bg-brand-yellow px-3 py-2 text-sm font-semibold text-brand-navy disabled:opacity-60"
               >
                 {enviando ? "Guardando..." : "Confirmar salida"}
               </button>

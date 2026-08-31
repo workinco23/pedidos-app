@@ -9,7 +9,7 @@ export default async function AdminLayout({
   const usuario = await exigirRol(["admin"]);
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#0B1325" }}>
+    <div className="flex min-h-screen flex-col bg-brand-navy-deep">
       <PanelHeader usuario={usuario} titulo="Importar Maestros" />
       <main className="flex-1 p-6">{children}</main>
     </div>

@@ -45,7 +45,7 @@ function LoginForm() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         <div className="absolute bottom-8 left-8 z-10 text-white">
-          <span className="rounded bg-[#FFCD00] px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-black">
+          <span className="rounded bg-brand-yellow px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-navy">
             Centro de Distribución
           </span>
           <p className="mt-2 text-sm font-medium text-slate-200">

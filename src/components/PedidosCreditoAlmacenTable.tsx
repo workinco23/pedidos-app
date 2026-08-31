@@ -60,7 +60,7 @@ export function PedidosCreditoAlmacenTable({ todos, enTiendaIds }: Props) {
               style={{ backgroundColor: enTienda ? "#FEF2F2" : "#FFFFFF" }}
             >
               <div>
-                <p className="text-sm font-semibold text-[#0F172A]">
+                <p className="text-sm font-semibold text-brand-navy">
                   {p.razon_social}{" "}
                   {enTienda && (
                     <span
