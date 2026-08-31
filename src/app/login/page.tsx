@@ -3,7 +3,13 @@
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Suspense, useState } from "react";
+import { Suspense, useState, type FormEvent } from "react";
+
+const EMAIL_INVITADO = "garita.invitado@ferreyros.com.pe";
+
+function passwordDesdePin(pin: string) {
+  return `GARITA-${pin}-fesa`;
+}
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -11,6 +17,8 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(
     searchParams.get("error")
   );
+  const [mostrarInvitado, setMostrarInvitado] = useState(false);
+  const [pin, setPin] = useState("");
 
   async function iniciarSesionConGoogle() {
     setCargando(true);
@@ -30,6 +38,23 @@ function LoginForm() {
       setError(error.message);
       setCargando(false);
     }
+  }
+
+  async function ingresarComoInvitado(e: FormEvent) {
+    e.preventDefault();
+    setCargando(true);
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: EMAIL_INVITADO,
+      password: passwordDesdePin(pin),
+    });
+    if (error) {
+      setError("PIN incorrecto");
+      setCargando(false);
+      return;
+    }
+    window.location.href = "/";
   }
 
   return (
@@ -107,6 +132,37 @@ function LoginForm() {
               {cargando ? "Redirigiendo..." : "Continuar con Google"}
             </span>
           </button>
+
+          {mostrarInvitado ? (
+            <form onSubmit={ingresarComoInvitado} className="mt-3 flex flex-col gap-2">
+              <input
+                autoFocus
+                inputMode="numeric"
+                placeholder="PIN de GARITA"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                className="rounded-xl border border-slate-300 px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+              <button
+                type="submit"
+                disabled={cargando || pin.length === 0}
+                className="rounded-xl bg-brand-navy px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-navy-soft disabled:opacity-60"
+              >
+                {cargando ? "Ingresando..." : "Ingresar"}
+              </button>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setMostrarInvitado(true);
+                setError(null);
+              }}
+              className="mt-3 w-full rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
+            >
+              Ingresar como Invitado (GARITA)
+            </button>
+          )}
 
           {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
