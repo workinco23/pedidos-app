@@ -4,13 +4,11 @@ import { NextResponse } from "next/server";
 import type { ResultadoBusquedaCliente } from "@/lib/types";
 
 export async function GET(request: Request) {
+  // No se vuelve a validar el usuario acá: el middleware ya exige sesión
+  // para cualquier ruta no listada en RUTAS_PUBLICAS (incluida esta), así
+  // que repetir supabase.auth.getUser() acá sumaba un segundo viaje de red
+  // al servidor de auth de Supabase en cada request, sin aportar nada extra.
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
 
   const doc = new URL(request.url).searchParams.get("doc")?.trim();
   if (!doc || !/^[a-zA-Z0-9-]+$/.test(doc)) {

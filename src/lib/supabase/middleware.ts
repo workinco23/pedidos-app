@@ -66,7 +66,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && !esRutaPublica) {
+  // El chequeo de rol de abajo solo existe para redirigir entre páginas
+  // (/, /login, /comercial, /almacen, etc.); una ruta /api/* nunca hace
+  // match con esos casos, así que para /api/* nos ahorramos ese viaje a
+  // la base de datos en cada request — la autorización real de datos la
+  // sigue haciendo RLS con la sesión ya validada arriba.
+  const esRutaApi = pathname.startsWith("/api/");
+
+  if (user && !esRutaPublica && !esRutaApi) {
     const { data: perfil } = await supabase
       .from("usuarios")
       .select("rol")
