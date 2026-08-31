@@ -16,10 +16,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ resultados: [] as SugerenciaCliente[] });
   }
 
+  // Buscar solo desde el inicio de una palabra (no en cualquier posición):
+  // Postgres puede resolver esto mucho más rápido que un %termino% libre en
+  // una tabla de 50k+ filas (ver PORTS.md / notas de perf), y en la práctica
+  // es como la gente espera que funcione un buscador de nombre de empresa.
+  // Se sanean los caracteres con significado especial en la sintaxis .or()
+  // de PostgREST (, ( ) *) antes de armar el filtro.
+  const termino = q.replace(/[,()*]/g, "");
+  if (!termino) {
+    return NextResponse.json({ resultados: [] as SugerenciaCliente[] });
+  }
+
   const { data, error } = await supabase
     .from("clientes")
     .select("ruc_dni, bp, razon_social")
-    .ilike("razon_social", `%${q}%`)
+    .or(`razon_social.ilike.${termino}*,razon_social.ilike.* ${termino}*`)
     .order("razon_social", { ascending: true })
     .limit(8);
 

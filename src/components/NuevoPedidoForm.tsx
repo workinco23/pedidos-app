@@ -56,6 +56,8 @@ export function NuevoPedidoForm({
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
   const razonSocialProgramatica = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const cacheSugerenciasRef = useRef<Map<string, SugerenciaCliente[]>>(new Map());
 
   function setRazonSocialSilencioso(valor: string) {
     razonSocialProgramatica.current = true;
@@ -81,20 +83,36 @@ export function NuevoPedidoForm({
       setMostrarSugerencias(false);
       return;
     }
-    if (bpBloqueado || razonSocial.trim().length < 2) {
+    const termino = razonSocial.trim().toLowerCase();
+    if (bpBloqueado || termino.length < 2) {
       setSugerencias([]);
       return;
     }
+
+    const enCache = cacheSugerenciasRef.current.get(termino);
+    if (enCache) {
+      setSugerencias(enCache);
+      setMostrarSugerencias(true);
+      return;
+    }
+
     setBuscandoSugerencias(true);
     const timeoutId = setTimeout(async () => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       try {
         const res = await fetch(
-          `/api/clientes/buscar-nombre?q=${encodeURIComponent(razonSocial.trim())}`
+          `/api/clientes/buscar-nombre?q=${encodeURIComponent(termino)}`,
+          { signal: controller.signal }
         );
         const data = await res.json();
-        setSugerencias(res.ok ? (data.resultados as SugerenciaCliente[]) : []);
+        const resultados = res.ok ? (data.resultados as SugerenciaCliente[]) : [];
+        cacheSugerenciasRef.current.set(termino, resultados);
+        setSugerencias(resultados);
         setMostrarSugerencias(true);
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setSugerencias([]);
       } finally {
         setBuscandoSugerencias(false);
