@@ -55,6 +55,7 @@ export function NuevoPedidoForm({
   const [sugerencias, setSugerencias] = useState<SugerenciaCliente[]>([]);
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
+  const [errorSugerencias, setErrorSugerencias] = useState<string | null>(null);
   const razonSocialProgramatica = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const cacheSugerenciasRef = useRef<Map<string, SugerenciaCliente[]>>(new Map());
@@ -86,17 +87,21 @@ export function NuevoPedidoForm({
     const termino = razonSocial.trim().toLowerCase();
     if (bpBloqueado || termino.length < 2) {
       setSugerencias([]);
+      setMostrarSugerencias(false);
       return;
     }
 
     const enCache = cacheSugerenciasRef.current.get(termino);
     if (enCache) {
+      setErrorSugerencias(null);
       setSugerencias(enCache);
       setMostrarSugerencias(true);
       return;
     }
 
+    setErrorSugerencias(null);
     setBuscandoSugerencias(true);
+    setMostrarSugerencias(true);
     const timeoutId = setTimeout(async () => {
       abortControllerRef.current?.abort();
       const controller = new AbortController();
@@ -107,12 +112,17 @@ export function NuevoPedidoForm({
           { signal: controller.signal }
         );
         const data = await res.json();
-        const resultados = res.ok ? (data.resultados as SugerenciaCliente[]) : [];
+        if (!res.ok) {
+          setErrorSugerencias(data.error ?? `Error al buscar (HTTP ${res.status})`);
+          setSugerencias([]);
+          return;
+        }
+        const resultados = data.resultados as SugerenciaCliente[];
         cacheSugerenciasRef.current.set(termino, resultados);
         setSugerencias(resultados);
-        setMostrarSugerencias(true);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
+        setErrorSugerencias("No se pudo conectar para buscar");
         setSugerencias([]);
       } finally {
         setBuscandoSugerencias(false);
@@ -454,10 +464,14 @@ export function NuevoPedidoForm({
             onBlur={() => setMostrarSugerencias(false)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          {mostrarSugerencias && (buscandoSugerencias || sugerencias.length > 0) && (
+          {mostrarSugerencias && (
             <ul className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg">
               {buscandoSugerencias ? (
                 <li className="px-3 py-2 text-xs text-slate-400">Buscando...</li>
+              ) : errorSugerencias ? (
+                <li className="px-3 py-2 text-xs text-red-600">{errorSugerencias}</li>
+              ) : sugerencias.length === 0 ? (
+                <li className="px-3 py-2 text-xs text-slate-400">Sin resultados</li>
               ) : (
                 sugerencias.map((s) => (
                   <li key={s.ruc_dni}>
