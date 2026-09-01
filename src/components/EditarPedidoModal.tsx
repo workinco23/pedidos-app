@@ -14,7 +14,7 @@ export function EditarPedidoModal({
   const [documento, setDocumento] = useState(pedido.documento_identidad);
   const [razonSocial, setRazonSocial] = useState(pedido.razon_social);
   const [pedidoVenta, setPedidoVenta] = useState(pedido.pedido_venta);
-  const [ob, setOb] = useState(pedido.ob);
+  const [ob, setOb] = useState(pedido.ob ?? "");
   const [tipoComprobante, setTipoComprobante] = useState<TipoComprobante>(
     pedido.tipo_comprobante
   );
@@ -86,7 +86,14 @@ export function EditarPedidoModal({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-500">OB</label>
+            <label className="text-xs font-medium text-slate-500">
+              OB
+              {pedido.estado === "pendiente_creditos" && !pedido.ob && (
+                <span className="ml-1 font-normal text-amber-600">
+                  (al completarlo se aprueba el crédito)
+                </span>
+              )}
+            </label>
             <input
               value={ob}
               onChange={(e) => setOb(e.target.value)}

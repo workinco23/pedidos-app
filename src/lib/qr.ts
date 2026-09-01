@@ -11,7 +11,7 @@ export function construirPayloadQrCliente(pedidos: Pedido[]): QrPayload {
     pedidos: pedidos.map((p) => ({
       pedidoId: p.id,
       pedidoVenta: p.pedido_venta,
-      obs: [p.ob, ...p.obsAdicionales],
+      obs: [p.ob, ...p.obsAdicionales].filter((ob): ob is string => Boolean(ob)),
     })),
   };
 }

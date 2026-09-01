@@ -58,6 +58,22 @@ export async function PATCH(
     return NextResponse.json({ error: "No hay campos para actualizar" }, { status: 400 });
   }
 
+  // Completar el OB de un pedido a crédito que todavía no tenía es, en la
+  // práctica, la aprobación: si estaba pendiente_creditos y ahora se le
+  // carga un OB, pasa directo a en_extraccion (equivalente a apretar
+  // "Aprobado por Créditos") en vez de quedar aprobado pero sin OB por un
+  // lado, o con OB pero sin aprobar por el otro.
+  if (campos.ob) {
+    const { data: actual } = await supabase
+      .from("pedidos")
+      .select("estado")
+      .eq("id", id)
+      .single();
+    if (actual?.estado === "pendiente_creditos") {
+      campos.estado = "en_extraccion";
+    }
+  }
+
   const { data, error } = await supabase
     .from("pedidos")
     .update(campos)

@@ -34,7 +34,7 @@ export interface Pedido {
   documento_identidad: string;
   razon_social: string;
   pedido_venta: string;
-  ob: string;
+  ob: string | null;
   tipo_comprobante: TipoComprobante;
   estado: EstadoPedido;
   origen: OrigenPedido;

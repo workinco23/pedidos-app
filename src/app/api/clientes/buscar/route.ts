@@ -1,14 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { consultarDocumento } from "@/lib/sunat";
+import { obtenerBpsAsignados } from "@/lib/carteraAsignada";
 import { NextResponse } from "next/server";
 import type { ResultadoBusquedaCliente } from "@/lib/types";
 
 export async function GET(request: Request) {
-  // No se vuelve a validar el usuario acá: el middleware ya exige sesión
-  // para cualquier ruta no listada en RUTAS_PUBLICAS (incluida esta), así
-  // que repetir supabase.auth.getUser() acá sumaba un segundo viaje de red
-  // al servidor de auth de Supabase en cada request, sin aportar nada extra.
   const supabase = await createClient();
+
+  // A diferencia de otras rutas de este mismo panel, acá sí hace falta
+  // pedir el usuario: no solo para confirmar que hay sesión (eso ya lo
+  // garantiza el middleware) sino para saber SU email y poder restringir
+  // la búsqueda a su cartera asignada si tiene una.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const bpsAsignados = user ? await obtenerBpsAsignados(supabase, user.email!) : null;
 
   const doc = new URL(request.url).searchParams.get("doc")?.trim();
   if (!doc || !/^[a-zA-Z0-9-]+$/.test(doc)) {
@@ -25,11 +31,22 @@ export async function GET(request: Request) {
     ? `ruc_dni.eq.${doc},bp.eq.${doc},bp.eq.${bpConCeros}`
     : `ruc_dni.eq.${doc},bp.eq.${doc}`;
 
-  const { data: cliente } = await supabase
+  const { data: clienteEncontrado } = await supabase
     .from("clientes")
     .select("ruc_dni, bp, razon_social")
     .or(filtroOr)
     .maybeSingle();
+
+  // Si el usuario tiene cartera asignada y el cliente encontrado pertenece
+  // a otro vendedor, se trata como "no encontrado localmente" (no se le
+  // entrega el BP/vendedor ajeno) en vez de bloquear la búsqueda: sigue
+  // pudiendo consultar el RUC/DNI por la vía externa para un registro sin BP.
+  const cliente =
+    clienteEncontrado && bpsAsignados && clienteEncontrado.bp
+      ? bpsAsignados.includes(clienteEncontrado.bp)
+        ? clienteEncontrado
+        : null
+      : clienteEncontrado;
 
   if (cliente) {
     const cartera = cliente.bp

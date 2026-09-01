@@ -305,7 +305,7 @@ export function NuevoPedidoForm({
       documento_identidad: documento,
       razon_social: razonSocial,
       pedido_venta: l.pedidoVenta,
-      ob: l.obs[0],
+      ob: l.obs[0].trim() || null,
       tipo_comprobante: l.tipoComprobante,
       estado: condicionPago === "credito" ? ("pendiente_creditos" as const) : ("en_extraccion" as const),
       origen,
@@ -630,11 +630,18 @@ export function NuevoPedidoForm({
             </div>
 
             <div className="flex flex-col gap-1 lg:col-span-2">
-              <label className="text-xs font-medium text-slate-500">OB (Orden de Venta)</label>
+              <label className="text-xs font-medium text-slate-500">
+                OB (Orden de Venta)
+                {condicionPago === "credito" && (
+                  <span className="ml-1 font-normal text-slate-400">
+                    (opcional, se completa al aprobar el crédito)
+                  </span>
+                )}
+              </label>
               {linea.obs.map((ob, indiceOb) => (
                 <div key={indiceOb} className="flex gap-2">
                   <input
-                    required
+                    required={condicionPago !== "credito"}
                     placeholder="Ej. 60..."
                     value={ob}
                     onChange={(e) => actualizarOb(indiceLinea, indiceOb, e.target.value)}

@@ -120,11 +120,10 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
                       <EstadoBadge estado={p.estado} />
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {p.estado === "pendiente_creditos" && (
+                      {p.estado === "pendiente_creditos" && !p.ob && (
                         <button
                           onClick={() => aprobarCreditos(p.id)}
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold text-white hover:brightness-95"
-                          style={{ backgroundColor: "#B45309" }}
+                          className="flex items-center gap-1 rounded-md bg-status-warning-text px-2.5 py-1.5 text-xs font-bold text-white hover:brightness-95"
                         >
                           <IconoCheck /> Aprobado por Créditos
                         </button>
