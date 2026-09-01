@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import QRCode from "qrcode";
+import { createClient } from "@/lib/supabase/client";
 import { construirPayloadQrCliente } from "@/lib/qr";
-import { IconoQr } from "@/components/ComercialIcons";
+import { IconoQr, IconoCheck } from "@/components/ComercialIcons";
 import type { Pedido } from "@/lib/types";
 
 function armarAsunto(pedidos: Pedido[]) {
@@ -33,6 +34,7 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
 
   const asunto = armarAsunto(pedidos);
   const cuerpo = armarCuerpo(pedidos);
+  const yaGenerado = pedidos.every((p) => p.qr_codigo_hash);
 
   useEffect(() => {
     if (!abierto) return;
@@ -81,7 +83,18 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
     }
   }
 
-  function cerrar() {
+  async function cerrar() {
+    if (qrPreview && !yaGenerado) {
+      const supabase = createClient();
+      const marca = JSON.stringify(construirPayloadQrCliente(pedidos));
+      await supabase
+        .from("pedidos")
+        .update({ qr_codigo_hash: marca })
+        .in(
+          "id",
+          pedidos.map((p) => p.id)
+        );
+    }
     setAbierto(false);
     setQrPreview(null);
     setAmpliado(false);
@@ -93,9 +106,14 @@ export function GenerarQrClienteButton({ pedidos }: { pedidos: Pedido[] }) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="flex items-center gap-1.5 rounded-md border border-brand-yellow-dark bg-brand-yellow px-2.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-yellow-dark"
+        className={
+          yaGenerado
+            ? "flex items-center gap-1.5 rounded-md border border-slate-300 bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200"
+            : "flex items-center gap-1.5 rounded-md border border-brand-yellow-dark bg-brand-yellow px-2.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-yellow-dark"
+        }
       >
-        <IconoQr /> Generar QR / Plantilla
+        {yaGenerado ? <IconoCheck /> : <IconoQr />}
+        {yaGenerado ? "Ver QR generado" : "Generar QR / Plantilla"}
       </button>
     );
   }

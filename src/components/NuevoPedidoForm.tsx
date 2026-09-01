@@ -390,6 +390,12 @@ export function NuevoPedidoForm({
               readOnly={bpBloqueado}
               value={bp}
               onChange={(e) => setBp(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !bpBloqueado && bp) {
+                  e.preventDefault();
+                  consultarPorBp();
+                }
+              }}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-100"
             />
             {bpBloqueado ? (
@@ -436,6 +442,12 @@ export function NuevoPedidoForm({
               required
               value={documento}
               onChange={(e) => setDocumento(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && documento) {
+                  e.preventDefault();
+                  consultarDocumento();
+                }
+              }}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
             <button

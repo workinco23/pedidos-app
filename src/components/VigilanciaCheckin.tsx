@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { QrScanner } from "@/components/QrScanner";
 import { EstadoBadge } from "@/components/EstadoBadge";
+import { PersonaReceptorFields } from "@/components/PersonaReceptorFields";
 import { parsearPayloadQr } from "@/lib/qr";
 import type { Pedido } from "@/lib/types";
+
+type PedidoConVendedor = Pedido & { vendedor_nombre: string | null };
 
 export function VigilanciaCheckin() {
   const [modo, setModo] = useState<"qr" | "mostrador">("qr");
@@ -20,8 +23,11 @@ export function VigilanciaCheckin() {
   );
 
   // Pedidos decodificados del QR, pendientes de confirmar el ingreso
-  const [pedidosQr, setPedidosQr] = useState<Pedido[] | null>(null);
+  const [pedidosQr, setPedidosQr] = useState<PedidoConVendedor[] | null>(null);
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
+  // null = todavía no se preguntó (o no hace falta); true = confirmó que tiene
+  // sello; false = indicó que NO tiene sello, se bloquea el ingreso
+  const [selloConfirmado, setSelloConfirmado] = useState<boolean | null>(null);
 
   async function onQrDetectado(textoQr: string) {
     const payload = parsearPayloadQr(textoQr);
@@ -39,7 +45,8 @@ export function VigilanciaCheckin() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPedidosQr(data.pedidos as Pedido[]);
+      setPedidosQr(data.pedidos as PedidoConVendedor[]);
+      setSelloConfirmado(null);
     } catch (err) {
       setMensaje({
         tipo: "error",
@@ -50,8 +57,11 @@ export function VigilanciaCheckin() {
     }
   }
 
+  const tieneCredito = (pedidosQr ?? []).some((p) => p.condicion_pago === "credito");
+
   async function confirmarIngresoQr() {
     if (!pedidosQr) return;
+    if (tieneCredito && selloConfirmado !== true) return;
     setProcesando(true);
     setMensaje(null);
     try {
@@ -71,6 +81,7 @@ export function VigilanciaCheckin() {
       setPedidosQr(null);
       setDniReceptor("");
       setNombreReceptor("");
+      setSelloConfirmado(null);
     } catch (err) {
       setMensaje({
         tipo: "error",
@@ -86,6 +97,7 @@ export function VigilanciaCheckin() {
     setMensaje(null);
     setDniReceptor("");
     setNombreReceptor("");
+    setSelloConfirmado(null);
     setScannerKey((k) => k + 1);
   }
 
@@ -190,29 +202,53 @@ export function VigilanciaCheckin() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <input
-                placeholder="DNI o CE de quien recoge"
-                value={dniReceptor}
-                onChange={(e) => setDniReceptor(e.target.value)}
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            {tieneCredito && selloConfirmado === null ? (
+              <div className="rounded-md border border-amber-400 bg-amber-50 p-4">
+                <p className="mb-3 text-sm font-semibold text-amber-800">
+                  Este QR incluye pedido(s) a crédito. ¿Cuenta con sello?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelloConfirmado(true)}
+                    className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-yellow-dark"
+                  >
+                    Sí
+                  </button>
+                  <button
+                    onClick={() => setSelloConfirmado(false)}
+                    className="rounded-md border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            ) : tieneCredito && selloConfirmado === false ? (
+              <div className="rounded-md border border-red-400 bg-red-50 p-4 text-sm text-red-700">
+                No se puede continuar sin sello. Debe contactar con su vendedor
+                {pedidosQr.find((p) => p.condicion_pago === "credito")?.vendedor_nombre
+                  ? ` (${pedidosQr.find((p) => p.condicion_pago === "credito")?.vendedor_nombre})`
+                  : ""}{" "}
+                para indicar que el cliente no cuenta con sello.
+              </div>
+            ) : (
+              <PersonaReceptorFields
+                dni={dniReceptor}
+                nombre={nombreReceptor}
+                onChangeDni={setDniReceptor}
+                onChangeNombre={setNombreReceptor}
               />
-              <input
-                placeholder="Nombre de quien recoge"
-                value={nombreReceptor}
-                onChange={(e) => setNombreReceptor(e.target.value)}
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-              />
-            </div>
+            )}
 
             <div className="flex gap-2">
-              <button
-                onClick={confirmarIngresoQr}
-                disabled={procesando}
-                className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-yellow-dark disabled:opacity-60"
-              >
-                {procesando ? "Registrando..." : "Confirmar ingreso"}
-              </button>
+              {(!tieneCredito || selloConfirmado === true) && (
+                <button
+                  onClick={confirmarIngresoQr}
+                  disabled={procesando}
+                  className="rounded-md bg-brand-yellow px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-yellow-dark disabled:opacity-60"
+                >
+                  {procesando ? "Registrando..." : "Confirmar ingreso"}
+                </button>
+              )}
               <button
                 onClick={cancelarQr}
                 className="rounded-md border border-slate-500 px-4 py-2 text-sm text-slate-200 hover:bg-white/5"
@@ -258,20 +294,14 @@ export function VigilanciaCheckin() {
               />
             </div>
           )}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <input
-              placeholder="DNI o CE de quien recoge (opcional)"
-              value={dniReceptor}
-              onChange={(e) => setDniReceptor(e.target.value)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-            />
-            <input
-              placeholder="Nombre de quien recoge (opcional)"
-              value={nombreReceptor}
-              onChange={(e) => setNombreReceptor(e.target.value)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-            />
-          </div>
+          <PersonaReceptorFields
+            dni={dniReceptor}
+            nombre={nombreReceptor}
+            onChangeDni={setDniReceptor}
+            onChangeNombre={setNombreReceptor}
+            placeholderDni="DNI o CE de quien recoge (opcional)"
+            placeholderNombre="Nombre de quien recoge (opcional)"
+          />
           <button
             onClick={registrarMostrador}
             disabled={procesando || !documento}

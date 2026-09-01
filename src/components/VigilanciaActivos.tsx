@@ -21,7 +21,7 @@ export function VigilanciaActivos({
   const [registroCheckout, setRegistroCheckout] = useState<RegistroVigilancia | null>(
     null
   );
-  const [comprobantes, setComprobantes] = useState<string[]>(["500-"]);
+  const [comprobantes, setComprobantes] = useState<string[]>([""]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function VigilanciaActivos({
         `Salida registrada: ${registroCheckout.razon_social} estuvo ${minutos} min en tienda.`
       );
       setRegistroCheckout(null);
-      setComprobantes(["500-"]);
+      setComprobantes([""]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar salida");
     } finally {
@@ -201,7 +201,7 @@ export function VigilanciaActivos({
             ))}
             <button
               type="button"
-              onClick={() => setComprobantes((actuales) => [...actuales, "500-"])}
+              onClick={() => setComprobantes((actuales) => [...actuales, ""])}
               className="mb-4 text-xs font-medium text-slate-500 hover:text-slate-700"
             >
               + Agregar otro comprobante
@@ -218,7 +218,7 @@ export function VigilanciaActivos({
               <button
                 onClick={() => {
                   setRegistroCheckout(null);
-                  setComprobantes(["500-"]);
+                  setComprobantes([""]);
                   setError(null);
                 }}
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600"

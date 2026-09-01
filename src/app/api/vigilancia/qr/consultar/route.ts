@@ -38,9 +38,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se encontraron los pedidos del QR" }, { status: 404 });
   }
 
+  const bps = [...new Set(data.map((p) => p.bp).filter(Boolean))];
+  const { data: carteraRows } = bps.length
+    ? await supabase.from("cartera").select("bp, vendedor_nombre").in("bp", bps)
+    : { data: [] as { bp: string; vendedor_nombre: string }[] };
+  const vendedorPorBp = new Map((carteraRows ?? []).map((c) => [c.bp, c.vendedor_nombre]));
+
   const pedidos = data.map((p) => ({
     ...p,
     obsAdicionales: (p.pedido_obs ?? []).map((o: { ob: string }) => o.ob),
+    vendedor_nombre: vendedorPorBp.get(p.bp) ?? null,
   }));
 
   return NextResponse.json({ pedidos });
