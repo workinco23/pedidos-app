@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { IconoCheck } from "@/components/ComercialIcons";
 import { esContado } from "@/lib/pedidosFiltros";
@@ -18,13 +19,24 @@ interface Props {
 
 export function PedidosAlmacenTable({ todos, enTiendaIds }: Props) {
   const pendientes = todos.filter((p) => p.estado !== "entregado" && esContado(p));
+  const [cambiando, setCambiando] = useState<Set<string>>(new Set());
 
   async function cambiarEstado(id: string, estado: EstadoPedido) {
-    await fetch(`/api/pedidos/${id}/estado`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado }),
-    });
+    if (cambiando.has(id)) return;
+    setCambiando((actual) => new Set(actual).add(id));
+    try {
+      await fetch(`/api/pedidos/${id}/estado`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado }),
+      });
+    } finally {
+      setCambiando((actual) => {
+        const nuevo = new Set(actual);
+        nuevo.delete(id);
+        return nuevo;
+      });
+    }
   }
 
   return (
@@ -94,19 +106,16 @@ export function PedidosAlmacenTable({ todos, enTiendaIds }: Props) {
                       {p.estado === "en_extraccion" && (
                         <button
                           onClick={() => cambiarEstado(p.id, "contabilizado")}
-                          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          disabled={cambiando.has(p.id)}
+                          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                         >
-                          <IconoCheck /> Contabilizado
+                          <IconoCheck /> {cambiando.has(p.id) ? "Guardando..." : "Contabilizado"}
                         </button>
                       )}
-                      {p.estado === "facturado" && (
-                        <button
-                          onClick={() => cambiarEstado(p.id, "entregado")}
-                          className="flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold text-white hover:brightness-95"
-                          style={{ backgroundColor: "#059669" }}
-                        >
-                          <IconoCheck /> Entregado
-                        </button>
+                      {(p.estado === "contabilizado" || p.estado === "facturado") && (
+                        <span className="text-xs text-slate-400">
+                          Se marcará Entregado al registrar la salida en Vigilancia.
+                        </span>
                       )}
                     </div>
                   </div>

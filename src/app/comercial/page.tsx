@@ -10,6 +10,7 @@ export default async function ComercialPage() {
   const { data: pedidos } = await supabase
     .from("pedidos")
     .select("*, pedido_obs(ob)")
+    .not("estado", "in", "(entregado,despachado)")
     .order("fecha_registro", { ascending: false });
 
   const iniciales = (pedidos ?? []).map((p) => ({

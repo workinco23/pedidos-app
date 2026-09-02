@@ -44,17 +44,17 @@ describe("aplicarEventoPedido", () => {
 
   it("UPDATE reemplaza el pedido preservando obsAdicionales (no viene en el evento realtime)", () => {
     const actuales = [pedido({ id: "1", estado: "waiting", obsAdicionales: ["OB-2", "OB-3"] })];
-    const actualizado = pedido({ id: "1", estado: "entregado", obsAdicionales: [] });
+    const actualizado = pedido({ id: "1", estado: "en_extraccion", obsAdicionales: [] });
     const resultado = aplicarEventoPedido(actuales, { eventType: "UPDATE", new: actualizado });
-    expect(resultado[0].estado).toBe("entregado");
+    expect(resultado[0].estado).toBe("en_extraccion");
     expect(resultado[0].obsAdicionales).toEqual(["OB-2", "OB-3"]);
   });
 
-  it("UPDATE de un pedido marcado como entregado se refleja en la lista completa (regresion del bug de panel Almacen)", () => {
+  it("UPDATE de un pedido marcado como entregado lo saca de la lista activa (regresion del bug de panel Almacen)", () => {
     // Este es el escenario exacto reportado: un pedido pasa a "entregado" via
-    // el boton de Almacen. La lista completa que alimenta TODOS los sub-paneles
-    // debe reflejar el nuevo estado, para que al filtrar por otra pestaña
-    // (ej. Credito) el pedido ya no aparezca como pendiente.
+    // el boton de Almacen. Los paneles activos solo retienen pedidos en flujo,
+    // así que al llegar a un estado terminal debe desaparecer de la lista en
+    // vez de quedarse marcado como entregado dentro de ella.
     const actuales = [
       pedido({ id: "1", estado: "facturado" }),
       pedido({ id: "2", estado: "facturado" }),
@@ -63,8 +63,16 @@ describe("aplicarEventoPedido", () => {
       eventType: "UPDATE",
       new: pedido({ id: "1", estado: "entregado" }),
     });
-    const pendientes = resultado.filter((p) => p.estado !== "entregado");
-    expect(pendientes.map((p) => p.id)).toEqual(["2"]);
+    expect(resultado.map((p) => p.id)).toEqual(["2"]);
+  });
+
+  it("INSERT de un pedido ya entregado no se agrega a la lista activa", () => {
+    const actuales = [pedido({ id: "1" })];
+    const resultado = aplicarEventoPedido(actuales, {
+      eventType: "INSERT",
+      new: pedido({ id: "2", estado: "despachado" }),
+    });
+    expect(resultado.map((p) => p.id)).toEqual(["1"]);
   });
 
   it("DELETE quita el pedido de la lista", () => {

@@ -23,22 +23,28 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
   const grupos = agruparPorCliente(pedidos, enTiendaIds);
   const [editando, setEditando] = useState<Pedido | null>(null);
   const [borrando, setBorrando] = useState<string | null>(null);
+  const [cambiando, setCambiando] = useState<Set<string>>(new Set());
 
-  async function marcarFacturado(id: string) {
-    await fetch(`/api/pedidos/${id}/estado`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: "facturado" }),
-    });
+  async function cambiarEstado(id: string, estado: "facturado" | "en_extraccion") {
+    if (cambiando.has(id)) return;
+    setCambiando((actual) => new Set(actual).add(id));
+    try {
+      await fetch(`/api/pedidos/${id}/estado`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado }),
+      });
+    } finally {
+      setCambiando((actual) => {
+        const nuevo = new Set(actual);
+        nuevo.delete(id);
+        return nuevo;
+      });
+    }
   }
 
-  async function aprobarCreditos(id: string) {
-    await fetch(`/api/pedidos/${id}/estado`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: "en_extraccion" }),
-    });
-  }
+  const marcarFacturado = (id: string) => cambiarEstado(id, "facturado");
+  const aprobarCreditos = (id: string) => cambiarEstado(id, "en_extraccion");
 
   async function borrarPedido(id: string) {
     if (!confirm("¿Seguro que quieres borrar este pedido? Esta acción no se puede deshacer.")) {
@@ -123,17 +129,19 @@ export function PedidosComercialTable({ todos, enTiendaIds, filtro, mostrarQr = 
                       {p.estado === "pendiente_creditos" && !p.ob && (
                         <button
                           onClick={() => aprobarCreditos(p.id)}
-                          className="flex items-center gap-1 rounded-md bg-status-warning-text px-2.5 py-1.5 text-xs font-bold text-white hover:brightness-95"
+                          disabled={cambiando.has(p.id)}
+                          className="flex items-center gap-1 rounded-md bg-status-warning-text px-2.5 py-1.5 text-xs font-bold text-white hover:brightness-95 disabled:opacity-60"
                         >
-                          <IconoCheck /> Aprobado por Créditos
+                          <IconoCheck /> {cambiando.has(p.id) ? "Guardando..." : "Aprobado por Créditos"}
                         </button>
                       )}
                       {p.estado === "contabilizado" && p.condicion_pago === "contado" && (
                         <button
                           onClick={() => marcarFacturado(p.id)}
-                          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          disabled={cambiando.has(p.id)}
+                          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                         >
-                          <IconoCheck /> Marcar Facturado
+                          <IconoCheck /> {cambiando.has(p.id) ? "Guardando..." : "Marcar Facturado"}
                         </button>
                       )}
                       <button

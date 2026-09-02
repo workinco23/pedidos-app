@@ -29,7 +29,8 @@ export function ComercialPanelHeader({
         <div className="flex items-center gap-4">
           <Link
             href="/comercial/historial"
-            className="flex items-center gap-1.5 text-sm text-slate-300 decoration-slate-500 underline-offset-4 hover:text-white hover:underline"
+            className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+            style={{ borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.08)" }}
           >
             <IconoHistorial /> Ver historial
           </Link>
