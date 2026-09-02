@@ -2,8 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { EscanearComprobante } from "@/components/EscanearComprobante";
+import type { CamposComprobante } from "@/lib/comprobanteOcr";
 import type { RegistroVigilancia } from "@/lib/types";
 import { format, differenceInMinutes } from "date-fns";
+
+interface PedidoDelRegistro {
+  pedidoVenta: string;
+  obs: string[];
+}
+
+function validarContraPedidos(
+  campos: CamposComprobante,
+  pedidos: PedidoDelRegistro[]
+): "ok" | "parcial" | "sin-match" | "sin-datos" {
+  if (!campos.pedidoVenta && !campos.ob) return "sin-datos";
+  const pedidoCoincide = pedidos.find((p) => p.pedidoVenta === campos.pedidoVenta);
+  const obCoincideEnAlguno = pedidos.some((p) => campos.ob && p.obs.includes(campos.ob));
+  if (pedidoCoincide && campos.ob && pedidoCoincide.obs.includes(campos.ob)) return "ok";
+  if (pedidoCoincide || obCoincideEnAlguno) return "parcial";
+  return "sin-match";
+}
 
 const LABEL_ATENCION: Record<RegistroVigilancia["tipo_atencion"], string> = {
   recojo_qr: "Recojo con QR",
@@ -22,10 +41,52 @@ export function VigilanciaActivos({
     null
   );
   const [comprobantes, setComprobantes] = useState<string[]>([""]);
+  const [datosExtraidos, setDatosExtraidos] = useState<(CamposComprobante | null)[]>([null]);
+  const [pedidosDelRegistro, setPedidosDelRegistro] = useState<PedidoDelRegistro[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [, forzarActualizacion] = useState(0);
+
+  useEffect(() => {
+    if (!registroCheckout) {
+      setPedidosDelRegistro([]);
+      return;
+    }
+    const supabase = createClient();
+    let activo = true;
+    (async () => {
+      const { data } = await supabase
+        .from("registro_vigilancia_pedidos")
+        .select("pedidos(pedido_venta, ob, pedido_obs(ob))")
+        .eq("registro_vigilancia_id", registroCheckout.id);
+      if (!activo) return;
+      const filas = (data ?? []) as unknown as {
+        pedidos: { pedido_venta: string; ob: string | null; pedido_obs: { ob: string }[] } | null;
+      }[];
+      setPedidosDelRegistro(
+        filas
+          .map((f) => f.pedidos)
+          .filter((p): p is NonNullable<typeof p> => p !== null)
+          .map((p) => ({
+            pedidoVenta: p.pedido_venta,
+            obs: [p.ob, ...p.pedido_obs.map((o) => o.ob)].filter((x): x is string => Boolean(x)),
+          }))
+      );
+    })();
+    return () => {
+      activo = false;
+    };
+  }, [registroCheckout]);
+
+  function alExtraerDatos(indice: number, campos: CamposComprobante) {
+    if (campos.numeroComprobante) {
+      setComprobantes((actuales) =>
+        actuales.map((c, idx) => (idx === indice ? campos.numeroComprobante! : c))
+      );
+    }
+    setDatosExtraidos((actuales) => actuales.map((d, idx) => (idx === indice ? campos : d)));
+  }
 
   useEffect(() => {
     const intervalo = setInterval(() => forzarActualizacion((n) => n + 1), 30000);
@@ -90,6 +151,7 @@ export function VigilanciaActivos({
       );
       setRegistroCheckout(null);
       setComprobantes([""]);
+      setDatosExtraidos([null]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar salida");
     } finally {
@@ -178,31 +240,66 @@ export function VigilanciaActivos({
 
       {registroCheckout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-lg">
             <h3 className="mb-1 text-sm font-semibold text-slate-900">
               Salida — {registroCheckout.razon_social}
             </h3>
             <p className="mb-4 text-xs text-slate-500">
-              Ingresa los números de comprobante entregados por Almacén.
+              Ingresa el número de comprobante o escanea la foto del recuadro &quot;Comprobante de
+              Entrega&quot;.
             </p>
 
-            {comprobantes.map((c, i) => (
-              <input
-                key={i}
-                value={c}
-                placeholder={`Comprobante ${i + 1}`}
-                onChange={(e) =>
-                  setComprobantes((actuales) =>
-                    actuales.map((x, idx) => (idx === i ? e.target.value : x))
-                  )
-                }
-                className="mb-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-            ))}
+            {comprobantes.map((c, i) => {
+              const campos = datosExtraidos[i];
+              const validacion = campos ? validarContraPedidos(campos, pedidosDelRegistro) : null;
+              return (
+                <div key={i} className="mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      value={c}
+                      placeholder={`Comprobante ${i + 1}`}
+                      onChange={(e) =>
+                        setComprobantes((actuales) =>
+                          actuales.map((x, idx) => (idx === i ? e.target.value : x))
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                    <EscanearComprobante onExtraido={(extraidos) => alExtraerDatos(i, extraidos)} />
+                  </div>
+                  {campos && (
+                    <div className="mt-1 rounded-md bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
+                      <p>
+                        Pedido {campos.pedidoVenta ?? "—"} · OB {campos.ob ?? "—"} · Cliente{" "}
+                        {campos.codigoCliente ?? "—"} · Pago {campos.comprobantePago ?? "—"}
+                      </p>
+                      {validacion === "ok" && (
+                        <p className="font-medium text-emerald-600">
+                          ✓ Coincide con un pedido de esta salida
+                        </p>
+                      )}
+                      {validacion === "parcial" && (
+                        <p className="font-medium text-amber-600">
+                          ⚠ Coincide solo parcialmente, revisa el pedido y el OB
+                        </p>
+                      )}
+                      {(validacion === "sin-match" || validacion === "sin-datos") && (
+                        <p className="font-medium text-red-600">
+                          ⚠ No coincide con ningún pedido de esta salida, verifica la foto
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button
               type="button"
-              onClick={() => setComprobantes((actuales) => [...actuales, ""])}
-              className="mb-4 text-xs font-medium text-slate-500 hover:text-slate-700"
+              onClick={() => {
+                setComprobantes((actuales) => [...actuales, ""]);
+                setDatosExtraidos((actuales) => [...actuales, null]);
+              }}
+              className="mb-4 mt-1 text-xs font-medium text-slate-500 hover:text-slate-700"
             >
               + Agregar otro comprobante
             </button>
@@ -219,6 +316,7 @@ export function VigilanciaActivos({
                 onClick={() => {
                   setRegistroCheckout(null);
                   setComprobantes([""]);
+                  setDatosExtraidos([null]);
                   setError(null);
                 }}
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600"
