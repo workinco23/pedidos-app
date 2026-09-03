@@ -3,7 +3,9 @@
  * Tesseract.js descarga su worker/motor WASM/datos de idioma desde un CDN
  * externo (jsdelivr) en cada llamada; en una red lenta o restringida esa
  * descarga puede quedarse colgada sin nunca resolver ni rechazar la
- * promesa, dejando la UI en "Leyendo..." para siempre. Este timeout
+ * promesa, dejando la UI en "Leyendo..." para siempre. Por eso estos
+ * archivos se sirven desde /public/tesseract (mismo origen que la app, sin
+ * depender de un CDN externo) y además hay un timeout de respaldo que
  * garantiza que el usuario siempre reciba un resultado o un error.
  */
 export async function reconocerTexto(archivo: File, timeoutMs = 25000): Promise<string> {
@@ -16,7 +18,15 @@ export async function reconocerTexto(archivo: File, timeoutMs = 25000): Promise<
 
   let worker: Awaited<ReturnType<typeof createWorker>> | undefined;
   try {
-    worker = await Promise.race([createWorker("spa"), timeout]);
+    worker = await Promise.race([
+      createWorker("spa", 1, {
+        workerPath: "/tesseract/worker.min.js",
+        corePath: "/tesseract",
+        langPath: "/tesseract",
+        gzip: true,
+      }),
+      timeout,
+    ]);
     const resultado = await Promise.race([worker.recognize(archivo), timeout]);
     return resultado.data.text;
   } finally {
