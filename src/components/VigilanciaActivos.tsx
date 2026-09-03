@@ -12,6 +12,13 @@ interface PedidoDelRegistro {
   obs: string[];
 }
 
+interface FilaComprobante {
+  valor: string;
+  datos: CamposComprobante | null;
+}
+
+const FILA_VACIA: FilaComprobante = { valor: "", datos: null };
+
 function validarContraPedidos(
   campos: CamposComprobante,
   pedidos: PedidoDelRegistro[]
@@ -40,8 +47,7 @@ export function VigilanciaActivos({
   const [registroCheckout, setRegistroCheckout] = useState<RegistroVigilancia | null>(
     null
   );
-  const [comprobantes, setComprobantes] = useState<string[]>([""]);
-  const [datosExtraidos, setDatosExtraidos] = useState<(CamposComprobante | null)[]>([null]);
+  const [filasComprobantes, setFilasComprobantes] = useState<FilaComprobante[]>([FILA_VACIA]);
   const [pedidosDelRegistro, setPedidosDelRegistro] = useState<PedidoDelRegistro[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,13 +85,32 @@ export function VigilanciaActivos({
     };
   }, [registroCheckout]);
 
-  function alExtraerDatos(indice: number, campos: CamposComprobante) {
-    if (campos.numeroComprobante) {
-      setComprobantes((actuales) =>
-        actuales.map((c, idx) => (idx === indice ? campos.numeroComprobante! : c))
-      );
-    }
-    setDatosExtraidos((actuales) => actuales.map((d, idx) => (idx === indice ? campos : d)));
+  // Un solo botón de escaneo para toda la lista: cada foto llena la primera
+  // fila vacía que encuentre, o agrega una fila nueva si no hay ninguna
+  // vacía. Así el vigilante solo repite "Escanear" por cada comprobante
+  // físico, sin tener que crear filas a mano antes de cada foto.
+  function alEscanearNuevoComprobante(campos: CamposComprobante) {
+    setFilasComprobantes((actuales) => {
+      const idxVacio = actuales.findIndex((f) => f.valor.trim() === "");
+      const fila: FilaComprobante = { valor: campos.numeroComprobante ?? "", datos: campos };
+      if (idxVacio !== -1) {
+        return actuales.map((f, idx) => (idx === idxVacio ? fila : f));
+      }
+      return [...actuales, fila];
+    });
+  }
+
+  function actualizarValorFila(indice: number, valor: string) {
+    setFilasComprobantes((actuales) =>
+      actuales.map((f, idx) => (idx === indice ? { ...f, valor } : f))
+    );
+  }
+
+  function eliminarFila(indice: number) {
+    setFilasComprobantes((actuales) => {
+      const restantes = actuales.filter((_, idx) => idx !== indice);
+      return restantes.length > 0 ? restantes : [FILA_VACIA];
+    });
   }
 
   useEffect(() => {
@@ -137,7 +162,7 @@ export function VigilanciaActivos({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           registroId: registroCheckout.id,
-          comprobantes: comprobantes.map((c) => c.trim()).filter(Boolean),
+          comprobantes: filasComprobantes.map((f) => f.valor.trim()).filter(Boolean),
         }),
       });
       const data = await res.json();
@@ -150,8 +175,7 @@ export function VigilanciaActivos({
         `Salida registrada: ${registroCheckout.razon_social} estuvo ${minutos} min en tienda.`
       );
       setRegistroCheckout(null);
-      setComprobantes([""]);
-      setDatosExtraidos([null]);
+      setFilasComprobantes([FILA_VACIA]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar salida");
     } finally {
@@ -244,28 +268,35 @@ export function VigilanciaActivos({
             <h3 className="mb-1 text-sm font-semibold text-slate-900">
               Salida — {registroCheckout.razon_social}
             </h3>
-            <p className="mb-4 text-xs text-slate-500">
-              Ingresa el número de comprobante o escanea la foto del recuadro &quot;Comprobante de
-              Entrega&quot;.
+            <p className="mb-3 text-xs text-slate-500">
+              Escanea cada comprobante con la cámara (uno tras otro) o escribe los números a mano.
+              Cuando termines, dale a &quot;Confirmar salida&quot;.
             </p>
 
-            {comprobantes.map((c, i) => {
-              const campos = datosExtraidos[i];
+            <div className="mb-3">
+              <EscanearComprobante onExtraido={alEscanearNuevoComprobante} />
+            </div>
+
+            {filasComprobantes.map((f, i) => {
+              const campos = f.datos;
               const validacion = campos ? validarContraPedidos(campos, pedidosDelRegistro) : null;
               return (
                 <div key={i} className="mb-2">
                   <div className="flex items-center gap-1.5">
                     <input
-                      value={c}
+                      value={f.valor}
                       placeholder={`Comprobante ${i + 1}`}
-                      onChange={(e) =>
-                        setComprobantes((actuales) =>
-                          actuales.map((x, idx) => (idx === i ? e.target.value : x))
-                        )
-                      }
+                      onChange={(e) => actualizarValorFila(i, e.target.value)}
                       className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                     />
-                    <EscanearComprobante onExtraido={(extraidos) => alExtraerDatos(i, extraidos)} />
+                    <button
+                      type="button"
+                      onClick={() => eliminarFila(i)}
+                      title="Quitar este comprobante"
+                      className="shrink-0 rounded-md border border-slate-300 px-2 py-2 text-xs text-slate-500 hover:bg-slate-50"
+                    >
+                      ×
+                    </button>
                   </div>
                   {campos && (
                     <div className="mt-1 rounded-md bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
@@ -295,13 +326,10 @@ export function VigilanciaActivos({
             })}
             <button
               type="button"
-              onClick={() => {
-                setComprobantes((actuales) => [...actuales, ""]);
-                setDatosExtraidos((actuales) => [...actuales, null]);
-              }}
+              onClick={() => setFilasComprobantes((actuales) => [...actuales, { ...FILA_VACIA }])}
               className="mb-4 mt-1 text-xs font-medium text-slate-500 hover:text-slate-700"
             >
-              + Agregar otro comprobante
+              + Agregar comprobante en blanco
             </button>
 
             <div className="flex gap-2">
@@ -310,13 +338,12 @@ export function VigilanciaActivos({
                 disabled={enviando}
                 className="rounded-md bg-brand-yellow px-3 py-2 text-sm font-semibold text-brand-navy disabled:opacity-60"
               >
-                {enviando ? "Guardando..." : "Confirmar salida"}
+                {enviando ? "Guardando..." : "Listo, confirmar salida"}
               </button>
               <button
                 onClick={() => {
                   setRegistroCheckout(null);
-                  setComprobantes([""]);
-                  setDatosExtraidos([null]);
+                  setFilasComprobantes([FILA_VACIA]);
                   setError(null);
                 }}
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600"
