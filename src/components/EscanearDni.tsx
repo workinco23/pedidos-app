@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { IconoCamara } from "@/components/ComercialIcons";
 import { extraerCamposDni, type CamposDni } from "@/lib/dniOcr";
+import { reconocerTexto } from "@/lib/ocrWorker";
 
 export function EscanearDni({ onExtraido }: { onExtraido: (campos: CamposDni) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -16,16 +17,14 @@ export function EscanearDni({ onExtraido }: { onExtraido: (campos: CamposDni) =>
     setLeyendo(true);
     setError(null);
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("spa");
-      try {
-        const { data } = await worker.recognize(archivo);
-        onExtraido(extraerCamposDni(data.text));
-      } finally {
-        await worker.terminate();
-      }
-    } catch {
-      setError("No se pudo leer el DNI. Ingresa el número a mano.");
+      const texto = await reconocerTexto(archivo);
+      onExtraido(extraerCamposDni(texto));
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === "TIMEOUT_OCR"
+          ? "La lectura tardó demasiado (revisa la conexión a internet). Ingresa el DNI a mano."
+          : "No se pudo leer el DNI. Ingresa el número a mano."
+      );
     } finally {
       setLeyendo(false);
     }

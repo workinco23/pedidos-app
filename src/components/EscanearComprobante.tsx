@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { IconoCamara } from "@/components/ComercialIcons";
 import { extraerCamposComprobante, type CamposComprobante } from "@/lib/comprobanteOcr";
+import { reconocerTexto } from "@/lib/ocrWorker";
 
 export function EscanearComprobante({
   onExtraido,
@@ -20,16 +21,14 @@ export function EscanearComprobante({
     setLeyendo(true);
     setError(null);
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("spa");
-      try {
-        const { data } = await worker.recognize(archivo);
-        onExtraido(extraerCamposComprobante(data.text));
-      } finally {
-        await worker.terminate();
-      }
-    } catch {
-      setError("No se pudo leer la foto. Ingresa los datos manualmente.");
+      const texto = await reconocerTexto(archivo);
+      onExtraido(extraerCamposComprobante(texto));
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === "TIMEOUT_OCR"
+          ? "La lectura tardó demasiado (revisa la conexión a internet). Ingresa el comprobante a mano."
+          : "No se pudo leer la foto. Ingresa el comprobante a mano."
+      );
     } finally {
       setLeyendo(false);
     }
